@@ -1,0 +1,249 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String?
+  email          String   @unique
+  hashedPassword String
+  role           String   @default("owner") // "owner" | "collaborator"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Character {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // "main" | "supporting"
+  description String?  @db.Text
+  backstory   String?  @db.Text
+  factionId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  faction     Faction?  @relation(fields: [factionId], references: [id])
+  powers      CharacterPower[]
+  motivations CharacterMotivation[]
+  locations   CharacterLocation[]
+  items       CharacterItem[]
+  plotEvents  PlotEventCharacter[]
+  timelineEvents TimelineEventCharacter[]
+}
+
+model Power {
+  id         String   @id @default(cuid())
+  name       String
+  effects    String?  @db.Text
+  rules      String?  @db.Text
+  weaknesses String?  @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  characters CharacterPower[]
+}
+
+model CharacterPower {
+  characterId   String
+  powerId       String
+  strengthLevel Int      @default(5)
+  notes         String?  @db.Text
+  isPrimary     Boolean  @default(false)
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  power     Power     @relation(fields: [powerId], references: [id], onDelete: Cascade)
+
+  @@id([characterId, powerId])
+}
+
+model Motivation {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  category    String   // "personal" | "political" | "emotional" | "survival"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  characters CharacterMotivation[]
+  factions   FactionMotivation[]
+}
+
+model CharacterMotivation {
+  characterId   String
+  motivationId  String
+  priority      Int      @default(1)
+  personalNotes String?  @db.Text
+
+  character  Character  @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  motivation Motivation @relation(fields: [motivationId], references: [id], onDelete: Cascade)
+
+  @@id([characterId, motivationId])
+}
+
+model FactionMotivation {
+  factionId    String
+  motivationId String
+  priority     Int      @default(1)
+  notes        String?  @db.Text
+
+  faction    Faction    @relation(fields: [factionId], references: [id], onDelete: Cascade)
+  motivation Motivation @relation(fields: [motivationId], references: [id], onDelete: Cascade)
+
+  @@id([factionId, motivationId])
+}
+
+model Faction {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  characters  Character[]
+  motivations FactionMotivation[]
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // "continent" | "region" | "city" | "building" | "landmark"
+  description String?  @db.Text
+  climate     String?
+  culture     String?  @db.Text
+  parentId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent      Location?  @relation("LocationHierarchy", fields: [parentId], references: [id])
+  children    Location[] @relation("LocationHierarchy")
+  characters  CharacterLocation[]
+  plotEvents  PlotEvent[]
+  timelineEvents TimelineEvent[]
+  items       Item[]
+}
+
+model CharacterLocation {
+  characterId String
+  locationId  String
+  role        String   // "hometown" | "current" | "visited" | "imprisoned"
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  location  Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@id([characterId, locationId])
+}
+
+model StoryArc {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  type        String   // "main" | "subplot" | "character_arc"
+  status      String   @default("planned") // "planned" | "active" | "resolved"
+  parentArcId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parentArc   StoryArc?  @relation("ArcHierarchy", fields: [parentArcId], references: [id])
+  subPlots    StoryArc[] @relation("ArcHierarchy")
+  plotEvents  PlotEvent[]
+}
+
+model PlotEvent {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?  @db.Text
+  consequence     String?  @db.Text
+  order           Int      @default(0)
+  storyArcId      String
+  locationId      String?
+  timelineEventId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  storyArc       StoryArc       @relation(fields: [storyArcId], references: [id], onDelete: Cascade)
+  location       Location?      @relation(fields: [locationId], references: [id])
+  timelineEvent  TimelineEvent? @relation(fields: [timelineEventId], references: [id])
+  characters     PlotEventCharacter[]
+  items          PlotEventItem[]
+}
+
+model PlotEventCharacter {
+  plotEventId String
+  characterId String
+  role        String   // "protagonist" | "antagonist" | "witness" | "victim"
+
+  plotEvent PlotEvent @relation(fields: [plotEventId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@id([plotEventId, characterId])
+}
+
+model TimelineEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  inWorldDate String?
+  era         String?
+  order       Int      @default(0)
+  locationId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  location   Location?  @relation(fields: [locationId], references: [id])
+  characters TimelineEventCharacter[]
+  plotEvents PlotEvent[]
+}
+
+model TimelineEventCharacter {
+  timelineEventId String
+  characterId     String
+  notes           String?  @db.Text
+
+  timelineEvent TimelineEvent @relation(fields: [timelineEventId], references: [id], onDelete: Cascade)
+  character     Character     @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@id([timelineEventId, characterId])
+}
+
+model Item {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // "weapon" | "artifact" | "relic" | "tool" | "symbol"
+  description String?  @db.Text
+  lore        String?  @db.Text
+  properties  String?  @db.Text
+  locationId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  location   Location?  @relation(fields: [locationId], references: [id])
+  characters CharacterItem[]
+  plotEvents PlotEventItem[]
+}
+
+model CharacterItem {
+  characterId String
+  itemId      String
+  status      String   // "owns" | "owned" | "seeking" | "destroyed"
+  acquiredAt  String?  // in-world date
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  item      Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@id([characterId, itemId])
+}
+
+model PlotEventItem {
+  plotEventId String
+  itemId      String
+  role        String   // "used" | "discovered" | "destroyed" | "stolen"
+
+  plotEvent PlotEvent @relation(fields: [plotEventId], references: [id], onDelete: Cascade)
+  item      Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@id([plotEventId, itemId])
+}
