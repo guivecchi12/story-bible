@@ -1,4 +1,8 @@
-import { CharacterBase, CharacterPowerData, CharacterMotivationData } from "./CharacterBase";
+import {
+  CharacterBase,
+  CharacterPowerData,
+  CharacterMotivationData,
+} from "./CharacterBase";
 
 export class SupportingCharacter extends CharacterBase {
   constructor(
@@ -10,9 +14,20 @@ export class SupportingCharacter extends CharacterBase {
     motivations: CharacterMotivationData[] = [],
     description?: string,
     backstory?: string,
-    factionId?: string
+    factionId?: string,
   ) {
-    super(id, createdAt, updatedAt, name, "supporting", powers, motivations, description, backstory, factionId);
+    super(
+      id,
+      createdAt,
+      updatedAt,
+      name,
+      "supporting",
+      powers,
+      motivations,
+      description,
+      backstory,
+      factionId,
+    );
   }
 
   summarize(): string {

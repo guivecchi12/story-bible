@@ -34,7 +34,12 @@ export const factionService = {
     return prisma.faction.delete({ where: { id } });
   },
 
-  async addMotivation(factionId: string, motivationId: string, priority: number = 1, notes?: string) {
+  async addMotivation(
+    factionId: string,
+    motivationId: string,
+    priority: number = 1,
+    notes?: string,
+  ) {
     return prisma.factionMotivation.create({
       data: { factionId, motivationId, priority, notes },
     });

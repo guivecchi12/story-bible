@@ -2,22 +2,38 @@
 
 import { useState } from "react";
 import { PageHeader } from "@/components/layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { FileText, Users, Clock, BookOpen, MapPin, Shield, Loader2 } from "lucide-react";
+import {
+  FileText,
+  Users,
+  Clock,
+  BookOpen,
+  MapPin,
+  Shield,
+  Loader2,
+} from "lucide-react";
 
 const reports = [
   {
     type: "character-sheet",
     title: "Character Sheet Report",
-    description: "Full character profiles with powers, motivations, factions, locations, and items",
+    description:
+      "Full character profiles with powers, motivations, factions, locations, and items",
     icon: Users,
   },
   {
     type: "timeline",
     title: "Timeline Report",
-    description: "All timeline events sorted by order with era, dates, locations, and characters",
+    description:
+      "All timeline events sorted by order with era, dates, locations, and characters",
     icon: Clock,
   },
   {
@@ -29,7 +45,8 @@ const reports = [
   {
     type: "world-summary",
     title: "World Summary Report",
-    description: "All locations in hierarchy with descriptions, climate, and culture",
+    description:
+      "All locations in hierarchy with descriptions, climate, and culture",
     icon: MapPin,
   },
   {
@@ -55,9 +72,16 @@ export default function ReportsPage() {
       if (!res.ok) throw new Error("Failed to generate report");
       const reportData = await res.json();
       generatePDF(reportData);
-      addToast({ title: "Report generated", description: "PDF download started" });
+      addToast({
+        title: "Report generated",
+        description: "PDF download started",
+      });
     } catch {
-      addToast({ title: "Error", description: "Failed to generate report", variant: "destructive" });
+      addToast({
+        title: "Error",
+        description: "Failed to generate report",
+        variant: "destructive",
+      });
     } finally {
       setGenerating(null);
     }
@@ -83,19 +107,38 @@ export default function ReportsPage() {
         switch (type) {
           case "character-sheet":
             data.forEach((char: any, idx: number) => {
-              if (idx > 0) { doc.addPage(); startY = 20; }
+              if (idx > 0) {
+                doc.addPage();
+                startY = 20;
+              }
               doc.setFontSize(16);
               doc.text(char.name, 14, startY);
               doc.setFontSize(10);
-              doc.text(`Type: ${char.type} | Faction: ${char.faction?.name || "None"}`, 14, startY + 7);
-              if (char.description) { doc.text(`Description: ${char.description.slice(0, 200)}`, 14, startY + 14); startY += 7; }
+              doc.text(
+                `Type: ${char.type} | Faction: ${char.faction?.name || "None"}`,
+                14,
+                startY + 7,
+              );
+              if (char.description) {
+                doc.text(
+                  `Description: ${char.description.slice(0, 200)}`,
+                  14,
+                  startY + 14,
+                );
+                startY += 7;
+              }
               startY += 18;
 
               if (char.powers?.length) {
                 autoTable(doc, {
                   startY,
                   head: [["Power", "Strength", "Primary", "Notes"]],
-                  body: char.powers.map((cp: any) => [cp.power.name, `${cp.strengthLevel}/10`, cp.isPrimary ? "Yes" : "No", cp.notes || ""]),
+                  body: char.powers.map((cp: any) => [
+                    cp.power.name,
+                    `${cp.strengthLevel}/10`,
+                    cp.isPrimary ? "Yes" : "No",
+                    cp.notes || "",
+                  ]),
                   margin: { left: 14 },
                   styles: { fontSize: 8 },
                 });
@@ -106,7 +149,11 @@ export default function ReportsPage() {
                 autoTable(doc, {
                   startY,
                   head: [["Motivation", "Category", "Priority"]],
-                  body: char.motivations.map((cm: any) => [cm.motivation.name, cm.motivation.category, cm.priority]),
+                  body: char.motivations.map((cm: any) => [
+                    cm.motivation.name,
+                    cm.motivation.category,
+                    cm.priority,
+                  ]),
                   margin: { left: 14 },
                   styles: { fontSize: 8 },
                 });
@@ -118,14 +165,24 @@ export default function ReportsPage() {
           case "timeline":
             autoTable(doc, {
               startY,
-              head: [["#", "Title", "Era", "In-World Date", "Location", "Characters"]],
+              head: [
+                [
+                  "#",
+                  "Title",
+                  "Era",
+                  "In-World Date",
+                  "Location",
+                  "Characters",
+                ],
+              ],
               body: data.map((e: any) => [
                 e.order,
                 e.title,
                 e.era || "",
                 e.inWorldDate || "",
                 e.location?.name || "",
-                e.characters?.map((c: any) => c.character.name).join(", ") || "",
+                e.characters?.map((c: any) => c.character.name).join(", ") ||
+                  "",
               ]),
               margin: { left: 14 },
               styles: { fontSize: 8 },
@@ -134,17 +191,27 @@ export default function ReportsPage() {
 
           case "story-arc":
             data.forEach((arc: any, idx: number) => {
-              if (idx > 0) { doc.addPage(); startY = 20; }
+              if (idx > 0) {
+                doc.addPage();
+                startY = 20;
+              }
               doc.setFontSize(14);
               doc.text(`${arc.title} [${arc.status}]`, 14, startY);
               doc.setFontSize(10);
-              doc.text(`Type: ${arc.type}${arc.description ? ` | ${arc.description.slice(0, 100)}` : ""}`, 14, startY + 7);
+              doc.text(
+                `Type: ${arc.type}${arc.description ? ` | ${arc.description.slice(0, 100)}` : ""}`,
+                14,
+                startY + 7,
+              );
               startY += 16;
 
               if (arc.subPlots?.length) {
                 doc.text("Subplots:", 14, startY);
                 startY += 6;
-                arc.subPlots.forEach((sp: any) => { doc.text(`  - ${sp.title} [${sp.status}]`, 14, startY); startY += 5; });
+                arc.subPlots.forEach((sp: any) => {
+                  doc.text(`  - ${sp.title} [${sp.status}]`, 14, startY);
+                  startY += 5;
+                });
                 startY += 4;
               }
 
@@ -156,7 +223,9 @@ export default function ReportsPage() {
                     pe.order,
                     pe.title,
                     pe.location?.name || "",
-                    pe.characters?.map((c: any) => c.character.name).join(", ") || "",
+                    pe.characters
+                      ?.map((c: any) => c.character.name)
+                      .join(", ") || "",
                   ]),
                   margin: { left: 14 },
                   styles: { fontSize: 8 },
@@ -184,10 +253,17 @@ export default function ReportsPage() {
 
           case "faction":
             data.forEach((faction: any, idx: number) => {
-              if (idx > 0) { doc.addPage(); startY = 20; }
+              if (idx > 0) {
+                doc.addPage();
+                startY = 20;
+              }
               doc.setFontSize(14);
               doc.text(faction.name, 14, startY);
-              if (faction.description) { doc.setFontSize(10); doc.text(faction.description.slice(0, 200), 14, startY + 7); startY += 7; }
+              if (faction.description) {
+                doc.setFontSize(10);
+                doc.text(faction.description.slice(0, 200), 14, startY + 7);
+                startY += 7;
+              }
               startY += 12;
 
               if (faction.characters?.length) {
@@ -205,7 +281,11 @@ export default function ReportsPage() {
                 autoTable(doc, {
                   startY,
                   head: [["Motivation", "Category", "Priority"]],
-                  body: faction.motivations.map((fm: any) => [fm.motivation.name, fm.motivation.category, fm.priority]),
+                  body: faction.motivations.map((fm: any) => [
+                    fm.motivation.name,
+                    fm.motivation.category,
+                    fm.priority,
+                  ]),
                   margin: { left: 14 },
                   styles: { fontSize: 8 },
                 });
@@ -215,7 +295,9 @@ export default function ReportsPage() {
             break;
         }
 
-        doc.save(`story-bible-${type}-${new Date().toISOString().slice(0, 10)}.pdf`);
+        doc.save(
+          `story-bible-${type}-${new Date().toISOString().slice(0, 10)}.pdf`,
+        );
       });
     });
   };
@@ -233,7 +315,10 @@ export default function ReportsPage() {
 
   return (
     <div>
-      <PageHeader title="Reports" subtitle="Generate downloadable PDF reports" />
+      <PageHeader
+        title="Reports"
+        subtitle="Generate downloadable PDF reports"
+      />
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {reports.map((report) => (
           <Card key={report.type} className="flex flex-col">
@@ -242,7 +327,9 @@ export default function ReportsPage() {
                 <report.icon className="h-8 w-8 text-primary" />
                 <div>
                   <CardTitle className="text-base">{report.title}</CardTitle>
-                  <CardDescription className="text-xs mt-1">{report.description}</CardDescription>
+                  <CardDescription className="text-xs mt-1">
+                    {report.description}
+                  </CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -254,9 +341,15 @@ export default function ReportsPage() {
                 disabled={generating === report.type}
               >
                 {generating === report.type ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-2" />Generating...</>
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Generating...
+                  </>
                 ) : (
-                  <><FileText className="h-4 w-4 mr-2" />Generate PDF</>
+                  <>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Generate PDF
+                  </>
                 )}
               </Button>
             </CardContent>

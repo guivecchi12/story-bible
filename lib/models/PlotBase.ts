@@ -13,7 +13,7 @@ export abstract class PlotBase extends StoryElement {
     title: string,
     type: string,
     status: string,
-    description?: string
+    description?: string,
   ) {
     super(id, createdAt, updatedAt);
     this.title = title;

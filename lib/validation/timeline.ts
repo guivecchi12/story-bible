@@ -16,4 +16,6 @@ export const timelineEventCharacterSchema = z.object({
 });
 
 export type TimelineEventInput = z.infer<typeof timelineEventSchema>;
-export type TimelineEventCharacterInput = z.infer<typeof timelineEventCharacterSchema>;
+export type TimelineEventCharacterInput = z.infer<
+  typeof timelineEventCharacterSchema
+>;

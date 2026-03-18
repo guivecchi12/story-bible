@@ -2,8 +2,17 @@ import { prisma } from "@/lib/db";
 
 export const searchService = {
   async globalSearch(query: string) {
-
-    const [characters, powers, motivations, factions, locations, storyArcs, plotEvents, timelineEvents, items] = await Promise.all([
+    const [
+      characters,
+      powers,
+      motivations,
+      factions,
+      locations,
+      storyArcs,
+      plotEvents,
+      timelineEvents,
+      items,
+    ] = await Promise.all([
       prisma.character.findMany({
         where: { name: { contains: query, mode: "insensitive" } },
         select: { id: true, name: true, type: true },
@@ -43,14 +52,32 @@ export const searchService = {
     ]);
 
     return {
-      characters: characters.map((c) => ({ ...c, entityType: "character" as const })),
+      characters: characters.map((c) => ({
+        ...c,
+        entityType: "character" as const,
+      })),
       powers: powers.map((p) => ({ ...p, entityType: "power" as const })),
-      motivations: motivations.map((m) => ({ ...m, entityType: "motivation" as const })),
+      motivations: motivations.map((m) => ({
+        ...m,
+        entityType: "motivation" as const,
+      })),
       factions: factions.map((f) => ({ ...f, entityType: "faction" as const })),
-      locations: locations.map((l) => ({ ...l, entityType: "location" as const })),
-      storyArcs: storyArcs.map((s) => ({ ...s, entityType: "story-arc" as const })),
-      plotEvents: plotEvents.map((p) => ({ ...p, entityType: "plot-event" as const })),
-      timelineEvents: timelineEvents.map((t) => ({ ...t, entityType: "timeline" as const })),
+      locations: locations.map((l) => ({
+        ...l,
+        entityType: "location" as const,
+      })),
+      storyArcs: storyArcs.map((s) => ({
+        ...s,
+        entityType: "story-arc" as const,
+      })),
+      plotEvents: plotEvents.map((p) => ({
+        ...p,
+        entityType: "plot-event" as const,
+      })),
+      timelineEvents: timelineEvents.map((t) => ({
+        ...t,
+        entityType: "timeline" as const,
+      })),
       items: items.map((i) => ({ ...i, entityType: "item" as const })),
     };
   },

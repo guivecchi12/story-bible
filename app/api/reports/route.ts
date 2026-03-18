@@ -5,7 +5,8 @@ import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const { type } = await req.json();
@@ -72,11 +73,21 @@ export async function POST(req: Request) {
         break;
 
       default:
-        return NextResponse.json({ error: "Invalid report type" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Invalid report type" },
+          { status: 400 },
+        );
     }
 
-    return NextResponse.json({ type, data, generatedAt: new Date().toISOString() });
+    return NextResponse.json({
+      type,
+      data,
+      generatedAt: new Date().toISOString(),
+    });
   } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

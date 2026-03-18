@@ -2,7 +2,12 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "./button";
 
 export interface Column<T> {
@@ -66,25 +71,37 @@ export function DataTable<T extends { id?: string }>({
                   key={col.key}
                   className={cn(
                     "h-12 px-4 text-left font-medium text-muted-foreground",
-                    col.sortable && "cursor-pointer select-none hover:text-foreground"
+                    col.sortable &&
+                      "cursor-pointer select-none hover:text-foreground",
                   )}
                   onClick={() => col.sortable && handleSort(col.key)}
                 >
                   <div className="flex items-center gap-1">
                     {col.header}
-                    {col.sortable && sortKey === col.key && (
-                      sortDir === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-                    )}
+                    {col.sortable &&
+                      sortKey === col.key &&
+                      (sortDir === "asc" ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      ))}
                   </div>
                 </th>
               ))}
-              {actions && <th className="h-12 px-4 text-left font-medium text-muted-foreground">Actions</th>}
+              {actions && (
+                <th className="h-12 px-4 text-left font-medium text-muted-foreground">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
             {paginated.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + (actions ? 1 : 0)} className="h-24 text-center text-muted-foreground">
+                <td
+                  colSpan={columns.length + (actions ? 1 : 0)}
+                  className="h-24 text-center text-muted-foreground"
+                >
                   No results found.
                 </td>
               </tr>
@@ -94,13 +111,15 @@ export function DataTable<T extends { id?: string }>({
                   key={(item as any).id || i}
                   className={cn(
                     "border-b transition-colors hover:bg-muted/50",
-                    onRowClick && "cursor-pointer"
+                    onRowClick && "cursor-pointer",
                   )}
                   onClick={() => onRowClick?.(item)}
                 >
                   {columns.map((col) => (
                     <td key={col.key} className="p-4">
-                      {col.render ? col.render(item) : String((item as any)[col.key] ?? "")}
+                      {col.render
+                        ? col.render(item)
+                        : String((item as any)[col.key] ?? "")}
                     </td>
                   ))}
                   {actions && (
@@ -120,10 +139,20 @@ export function DataTable<T extends { id?: string }>({
             Page {page + 1} of {totalPages} ({sorted.length} total)
           </p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

@@ -1,6 +1,12 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
+export function TableSkeleton({
+  rows = 5,
+  cols = 4,
+}: {
+  rows?: number;
+  cols?: number;
+}) {
   return (
     <div className="rounded-md border">
       <div className="border-b bg-muted/50 p-4">

@@ -36,7 +36,11 @@ export const timelineService = {
     return prisma.timelineEvent.delete({ where: { id } });
   },
 
-  async addCharacter(timelineEventId: string, characterId: string, notes?: string) {
+  async addCharacter(
+    timelineEventId: string,
+    characterId: string,
+    notes?: string,
+  ) {
     return prisma.timelineEventCharacter.create({
       data: { timelineEventId, characterId, notes },
     });

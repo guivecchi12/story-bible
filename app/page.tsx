@@ -6,7 +6,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
@@ -28,7 +34,11 @@ export default function HomePage() {
           redirect: false,
         });
         if (res?.error) {
-          addToast({ title: "Login failed", description: "Invalid email or password", variant: "destructive" });
+          addToast({
+            title: "Login failed",
+            description: "Invalid email or password",
+            variant: "destructive",
+          });
         } else {
           router.push("/dashboard");
         }
@@ -43,11 +53,19 @@ export default function HomePage() {
           setIsLogin(true);
         } else {
           const data = await res.json();
-          addToast({ title: "Registration failed", description: data.error || "Something went wrong", variant: "destructive" });
+          addToast({
+            title: "Registration failed",
+            description: data.error || "Something went wrong",
+            variant: "destructive",
+          });
         }
       }
     } catch {
-      addToast({ title: "Error", description: "Something went wrong", variant: "destructive" });
+      addToast({
+        title: "Error",
+        description: "Something went wrong",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -102,7 +120,11 @@ export default function HomePage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
+              {loading
+                ? "Please wait..."
+                : isLogin
+                  ? "Sign In"
+                  : "Create Account"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
@@ -111,7 +133,9 @@ export default function HomePage() {
               className="text-primary hover:underline"
               onClick={() => setIsLogin(!isLogin)}
             >
-              {isLogin ? "Need an account? Register" : "Already have an account? Sign in"}
+              {isLogin
+                ? "Need an account? Register"
+                : "Already have an account? Sign in"}
             </button>
           </div>
         </CardContent>

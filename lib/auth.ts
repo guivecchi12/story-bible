@@ -25,7 +25,10 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
         });
         if (!user) return null;
-        const isValid = await compare(credentials.password, user.hashedPassword);
+        const isValid = await compare(
+          credentials.password,
+          user.hashedPassword,
+        );
         if (!isValid) return null;
         return {
           id: user.id,

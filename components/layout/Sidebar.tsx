@@ -51,18 +51,22 @@ export function Sidebar() {
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 w-64 border-r bg-card transition-transform md:translate-x-0",
-          open ? "translate-x-0" : "-translate-x-full"
+          open ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <div className="flex h-16 items-center border-b px-6">
-          <Link href="/dashboard" className="flex items-center gap-2 font-bold text-lg">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 font-bold text-lg"
+          >
             <BookOpen className="h-6 w-6 text-primary" />
             Story Bible
           </Link>
         </div>
         <nav className="space-y-1 p-4">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+            const isActive =
+              pathname === item.href || pathname?.startsWith(item.href + "/");
             return (
               <Link
                 key={item.href}
@@ -72,7 +76,7 @@ export function Sidebar() {
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   isActive
                     ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -83,7 +87,10 @@ export function Sidebar() {
         </nav>
       </aside>
       {open && (
-        <div className="fixed inset-0 z-30 bg-black/50 md:hidden" onClick={() => setOpen(false)} />
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={() => setOpen(false)}
+        />
       )}
     </>
   );

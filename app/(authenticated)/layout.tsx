@@ -4,7 +4,11 @@ import { authOptions } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Navbar } from "@/components/layout/Navbar";
 
-export default async function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthenticatedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/");
 

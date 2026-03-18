@@ -1,10 +1,30 @@
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Zap, Heart, Shield, MapPin, BookOpen, GitBranch, Clock, Gem } from "lucide-react";
+import {
+  Users,
+  Zap,
+  Heart,
+  Shield,
+  MapPin,
+  BookOpen,
+  GitBranch,
+  Clock,
+  Gem,
+} from "lucide-react";
 import Link from "next/link";
 
 async function getCounts() {
-  const [characters, powers, motivations, factions, locations, storyArcs, plotEvents, timelineEvents, items] = await Promise.all([
+  const [
+    characters,
+    powers,
+    motivations,
+    factions,
+    locations,
+    storyArcs,
+    plotEvents,
+    timelineEvents,
+    items,
+  ] = await Promise.all([
     prisma.character.count(),
     prisma.power.count(),
     prisma.motivation.count(),
@@ -15,13 +35,31 @@ async function getCounts() {
     prisma.timelineEvent.count(),
     prisma.item.count(),
   ]);
-  return { characters, powers, motivations, factions, locations, storyArcs, plotEvents, timelineEvents, items };
+  return {
+    characters,
+    powers,
+    motivations,
+    factions,
+    locations,
+    storyArcs,
+    plotEvents,
+    timelineEvents,
+    items,
+  };
 }
 
 async function getRecentActivity() {
   const [recentCharacters, recentEvents] = await Promise.all([
-    prisma.character.findMany({ take: 5, orderBy: { updatedAt: "desc" }, select: { id: true, name: true, type: true, updatedAt: true } }),
-    prisma.plotEvent.findMany({ take: 5, orderBy: { updatedAt: "desc" }, include: { storyArc: { select: { title: true } } } }),
+    prisma.character.findMany({
+      take: 5,
+      orderBy: { updatedAt: "desc" },
+      select: { id: true, name: true, type: true, updatedAt: true },
+    }),
+    prisma.plotEvent.findMany({
+      take: 5,
+      orderBy: { updatedAt: "desc" },
+      include: { storyArc: { select: { title: true } } },
+    }),
   ]);
   return { recentCharacters, recentEvents };
 }
@@ -31,22 +69,78 @@ export default async function DashboardPage() {
   const activity = await getRecentActivity();
 
   const stats = [
-    { label: "Characters", count: counts.characters, icon: Users, href: "/characters", color: "text-blue-500" },
-    { label: "Powers", count: counts.powers, icon: Zap, href: "/powers", color: "text-yellow-500" },
-    { label: "Motivations", count: counts.motivations, icon: Heart, href: "/motivations", color: "text-red-500" },
-    { label: "Factions", count: counts.factions, icon: Shield, href: "/factions", color: "text-green-500" },
-    { label: "Locations", count: counts.locations, icon: MapPin, href: "/locations", color: "text-purple-500" },
-    { label: "Story Arcs", count: counts.storyArcs, icon: BookOpen, href: "/story-arcs", color: "text-indigo-500" },
-    { label: "Plot Events", count: counts.plotEvents, icon: GitBranch, href: "/plot-events", color: "text-orange-500" },
-    { label: "Timeline", count: counts.timelineEvents, icon: Clock, href: "/timeline", color: "text-cyan-500" },
-    { label: "Items", count: counts.items, icon: Gem, href: "/items", color: "text-pink-500" },
+    {
+      label: "Characters",
+      count: counts.characters,
+      icon: Users,
+      href: "/characters",
+      color: "text-blue-500",
+    },
+    {
+      label: "Powers",
+      count: counts.powers,
+      icon: Zap,
+      href: "/powers",
+      color: "text-yellow-500",
+    },
+    {
+      label: "Motivations",
+      count: counts.motivations,
+      icon: Heart,
+      href: "/motivations",
+      color: "text-red-500",
+    },
+    {
+      label: "Factions",
+      count: counts.factions,
+      icon: Shield,
+      href: "/factions",
+      color: "text-green-500",
+    },
+    {
+      label: "Locations",
+      count: counts.locations,
+      icon: MapPin,
+      href: "/locations",
+      color: "text-purple-500",
+    },
+    {
+      label: "Story Arcs",
+      count: counts.storyArcs,
+      icon: BookOpen,
+      href: "/story-arcs",
+      color: "text-indigo-500",
+    },
+    {
+      label: "Plot Events",
+      count: counts.plotEvents,
+      icon: GitBranch,
+      href: "/plot-events",
+      color: "text-orange-500",
+    },
+    {
+      label: "Timeline",
+      count: counts.timelineEvents,
+      icon: Clock,
+      href: "/timeline",
+      color: "text-cyan-500",
+    },
+    {
+      label: "Items",
+      count: counts.items,
+      icon: Gem,
+      href: "/items",
+      color: "text-pink-500",
+    },
   ];
 
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Overview of your story world</p>
+        <p className="text-muted-foreground mt-1">
+          Overview of your story world
+        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -54,7 +148,9 @@ export default async function DashboardPage() {
           <Link key={stat.label} href={stat.href}>
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {stat.label}
+                </CardTitle>
                 <stat.icon className={`h-5 w-5 ${stat.color}`} />
               </CardHeader>
               <CardContent>
@@ -76,12 +172,20 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {activity.recentCharacters.map((char) => (
-                  <Link key={char.id} href={`/characters/${char.id}`} className="flex items-center justify-between hover:bg-muted/50 rounded p-2 -mx-2">
+                  <Link
+                    key={char.id}
+                    href={`/characters/${char.id}`}
+                    className="flex items-center justify-between hover:bg-muted/50 rounded p-2 -mx-2"
+                  >
                     <div>
                       <p className="font-medium text-sm">{char.name}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{char.type}</p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {char.type}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground">{new Date(char.updatedAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(char.updatedAt).toLocaleDateString()}
+                    </p>
                   </Link>
                 ))}
               </div>
@@ -94,16 +198,26 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             {activity.recentEvents.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No plot events yet</p>
+              <p className="text-sm text-muted-foreground">
+                No plot events yet
+              </p>
             ) : (
               <div className="space-y-3">
                 {activity.recentEvents.map((event) => (
-                  <Link key={event.id} href={`/plot-events/${event.id}`} className="flex items-center justify-between hover:bg-muted/50 rounded p-2 -mx-2">
+                  <Link
+                    key={event.id}
+                    href={`/plot-events/${event.id}`}
+                    className="flex items-center justify-between hover:bg-muted/50 rounded p-2 -mx-2"
+                  >
                     <div>
                       <p className="font-medium text-sm">{event.title}</p>
-                      <p className="text-xs text-muted-foreground">{event.storyArc.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {event.storyArc.title}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground">{new Date(event.updatedAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(event.updatedAt).toLocaleDateString()}
+                    </p>
                   </Link>
                 ))}
               </div>

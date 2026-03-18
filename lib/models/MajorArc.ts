@@ -7,7 +7,7 @@ export class MajorArc extends PlotBase {
     updatedAt: Date,
     title: string,
     status: string = "planned",
-    description?: string
+    description?: string,
   ) {
     super(id, createdAt, updatedAt, title, "main", status, description);
   }

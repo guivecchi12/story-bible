@@ -38,6 +38,8 @@ export const characterItemSchema = z.object({
 
 export type CharacterInput = z.infer<typeof characterSchema>;
 export type CharacterPowerInput = z.infer<typeof characterPowerSchema>;
-export type CharacterMotivationInput = z.infer<typeof characterMotivationSchema>;
+export type CharacterMotivationInput = z.infer<
+  typeof characterMotivationSchema
+>;
 export type CharacterLocationInput = z.infer<typeof characterLocationSchema>;
 export type CharacterItemInput = z.infer<typeof characterItemSchema>;

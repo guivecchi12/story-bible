@@ -17,7 +17,7 @@ export abstract class LocationBase extends StoryElement {
     description?: string,
     climate?: string,
     culture?: string,
-    parentId?: string
+    parentId?: string,
   ) {
     super(id, createdAt, updatedAt);
     this.name = name;

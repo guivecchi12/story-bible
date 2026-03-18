@@ -9,9 +9,19 @@ export class City extends LocationBase {
     description?: string,
     climate?: string,
     culture?: string,
-    parentId?: string
+    parentId?: string,
   ) {
-    super(id, createdAt, updatedAt, name, "city", description, climate, culture, parentId);
+    super(
+      id,
+      createdAt,
+      updatedAt,
+      name,
+      "city",
+      description,
+      climate,
+      culture,
+      parentId,
+    );
   }
 
   summarize(): string {

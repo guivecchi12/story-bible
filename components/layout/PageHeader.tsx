@@ -8,7 +8,12 @@ interface PageHeaderProps {
   onAction?: () => void;
 }
 
-export function PageHeader({ title, subtitle, actionLabel, onAction }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  subtitle,
+  actionLabel,
+  onAction,
+}: PageHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-6">
       <div>

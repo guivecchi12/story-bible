@@ -8,7 +8,11 @@ interface FormFieldProps {
   name: string;
   type?: "text" | "email" | "password" | "number" | "textarea" | "select";
   value: string | number;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  onChange: (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => void;
   error?: string;
   placeholder?: string;
   required?: boolean;

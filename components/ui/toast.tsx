@@ -17,7 +17,9 @@ interface ToastContextType {
   removeToast: (id: string) => void;
 }
 
-const ToastContext = React.createContext<ToastContextType | undefined>(undefined);
+const ToastContext = React.createContext<ToastContextType | undefined>(
+  undefined,
+);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = React.useState<Toast[]>([]);
@@ -45,7 +47,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               "flex items-start gap-3 rounded-lg border p-4 shadow-lg transition-all",
               toast.variant === "destructive"
                 ? "border-destructive bg-destructive text-destructive-foreground"
-                : "border-border bg-background text-foreground"
+                : "border-border bg-background text-foreground",
             )}
           >
             <div className="flex-1">

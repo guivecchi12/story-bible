@@ -34,7 +34,7 @@ export abstract class CharacterBase extends StoryElement {
     motivations: CharacterMotivationData[] = [],
     description?: string,
     backstory?: string,
-    factionId?: string
+    factionId?: string,
   ) {
     super(id, createdAt, updatedAt);
     this.name = name;

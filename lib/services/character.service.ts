@@ -49,7 +49,13 @@ export const characterService = {
     return prisma.character.delete({ where: { id } });
   },
 
-  async addPower(characterId: string, powerId: string, strengthLevel: number = 5, isPrimary: boolean = false, notes?: string) {
+  async addPower(
+    characterId: string,
+    powerId: string,
+    strengthLevel: number = 5,
+    isPrimary: boolean = false,
+    notes?: string,
+  ) {
     return prisma.characterPower.create({
       data: { characterId, powerId, strengthLevel, isPrimary, notes },
     });
@@ -61,7 +67,12 @@ export const characterService = {
     });
   },
 
-  async addMotivation(characterId: string, motivationId: string, priority: number = 1, personalNotes?: string) {
+  async addMotivation(
+    characterId: string,
+    motivationId: string,
+    priority: number = 1,
+    personalNotes?: string,
+  ) {
     return prisma.characterMotivation.create({
       data: { characterId, motivationId, priority, personalNotes },
     });
@@ -85,7 +96,12 @@ export const characterService = {
     });
   },
 
-  async addItem(characterId: string, itemId: string, status: string, acquiredAt?: string) {
+  async addItem(
+    characterId: string,
+    itemId: string,
+    status: string,
+    acquiredAt?: string,
+  ) {
     return prisma.characterItem.create({
       data: { characterId, itemId, status, acquiredAt },
     });

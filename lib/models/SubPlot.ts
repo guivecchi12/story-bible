@@ -10,7 +10,7 @@ export class SubPlot extends PlotBase {
     title: string,
     status: string = "planned",
     description?: string,
-    parentArcId?: string
+    parentArcId?: string,
   ) {
     super(id, createdAt, updatedAt, title, "subplot", status, description);
     this.parentArcId = parentArcId;
