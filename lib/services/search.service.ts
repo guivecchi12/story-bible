@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 
 export const searchService = {
-  async globalSearch(query: string) {
+  async globalSearch(query: string, bookId: string) {
     const [
       characters,
       powers,
@@ -14,39 +14,39 @@ export const searchService = {
       items,
     ] = await Promise.all([
       prisma.character.findMany({
-        where: { name: { contains: query, mode: "insensitive" } },
+        where: { name: { contains: query, mode: "insensitive" }, bookId },
         select: { id: true, name: true, type: true },
       }),
       prisma.power.findMany({
-        where: { name: { contains: query, mode: "insensitive" } },
+        where: { name: { contains: query, mode: "insensitive" }, bookId },
         select: { id: true, name: true },
       }),
       prisma.motivation.findMany({
-        where: { name: { contains: query, mode: "insensitive" } },
+        where: { name: { contains: query, mode: "insensitive" }, bookId },
         select: { id: true, name: true, category: true },
       }),
       prisma.faction.findMany({
-        where: { name: { contains: query, mode: "insensitive" } },
+        where: { name: { contains: query, mode: "insensitive" }, bookId },
         select: { id: true, name: true },
       }),
       prisma.location.findMany({
-        where: { name: { contains: query, mode: "insensitive" } },
+        where: { name: { contains: query, mode: "insensitive" }, bookId },
         select: { id: true, name: true, type: true },
       }),
       prisma.storyArc.findMany({
-        where: { title: { contains: query, mode: "insensitive" } },
+        where: { title: { contains: query, mode: "insensitive" }, bookId },
         select: { id: true, title: true, type: true, status: true },
       }),
       prisma.plotEvent.findMany({
-        where: { title: { contains: query, mode: "insensitive" } },
+        where: { title: { contains: query, mode: "insensitive" }, bookId },
         select: { id: true, title: true },
       }),
       prisma.timelineEvent.findMany({
-        where: { title: { contains: query, mode: "insensitive" } },
+        where: { title: { contains: query, mode: "insensitive" }, bookId },
         select: { id: true, title: true, era: true },
       }),
       prisma.item.findMany({
-        where: { name: { contains: query, mode: "insensitive" } },
+        where: { name: { contains: query, mode: "insensitive" }, bookId },
         select: { id: true, name: true, type: true },
       }),
     ]);

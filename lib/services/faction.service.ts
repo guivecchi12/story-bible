@@ -2,8 +2,9 @@ import { prisma } from "@/lib/db";
 import { FactionInput } from "@/lib/validation";
 
 export const factionService = {
-  async getAll() {
+  async getAll(bookId: string) {
     return prisma.faction.findMany({
+      where: { bookId },
       include: {
         characters: true,
         motivations: { include: { motivation: true } },
@@ -22,8 +23,8 @@ export const factionService = {
     });
   },
 
-  async create(data: FactionInput) {
-    return prisma.faction.create({ data });
+  async create(data: FactionInput, bookId: string) {
+    return prisma.faction.create({ data: { ...data, bookId } });
   },
 
   async update(id: string, data: Partial<FactionInput>) {

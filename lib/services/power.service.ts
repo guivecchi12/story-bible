@@ -2,8 +2,9 @@ import { prisma } from "@/lib/db";
 import { PowerInput } from "@/lib/validation";
 
 export const powerService = {
-  async getAll() {
+  async getAll(bookId: string) {
     return prisma.power.findMany({
+      where: { bookId },
       include: { characters: { include: { character: true } } },
       orderBy: { createdAt: "desc" },
     });
@@ -16,8 +17,8 @@ export const powerService = {
     });
   },
 
-  async create(data: PowerInput) {
-    return prisma.power.create({ data });
+  async create(data: PowerInput, bookId: string) {
+    return prisma.power.create({ data: { ...data, bookId } });
   },
 
   async update(id: string, data: Partial<PowerInput>) {

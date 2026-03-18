@@ -2,8 +2,9 @@ import { prisma } from "@/lib/db";
 import { TimelineEventInput } from "@/lib/validation";
 
 export const timelineService = {
-  async getAll() {
+  async getAll(bookId: string) {
     return prisma.timelineEvent.findMany({
+      where: { bookId },
       include: {
         location: true,
         characters: { include: { character: true } },
@@ -24,8 +25,8 @@ export const timelineService = {
     });
   },
 
-  async create(data: TimelineEventInput) {
-    return prisma.timelineEvent.create({ data });
+  async create(data: TimelineEventInput, bookId: string) {
+    return prisma.timelineEvent.create({ data: { ...data, bookId } });
   },
 
   async update(id: string, data: Partial<TimelineEventInput>) {

@@ -17,6 +17,7 @@ import { ConfirmDialog } from "@/components/shared";
 import { TableSkeleton } from "@/components/layout";
 import { useToast } from "@/components/ui/toast";
 import { Eye, Pencil, Trash2 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface Character {
   id: string;
@@ -51,8 +52,8 @@ export default function CharactersPage() {
   const fetchData = async () => {
     try {
       const [charRes, facRes] = await Promise.all([
-        fetch("/api/characters"),
-        fetch("/api/factions"),
+        apiFetch("/api/characters"),
+        apiFetch("/api/factions"),
       ]);
       if (charRes.ok) setCharacters(await charRes.json());
       if (facRes.ok) setFactions(await facRes.json());
@@ -101,12 +102,12 @@ export default function CharactersPage() {
     try {
       const payload = { ...form, factionId: form.factionId || null };
       const res = editing
-        ? await fetch(`/api/characters/${editing.id}`, {
+        ? await apiFetch(`/api/characters/${editing.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           })
-        : await fetch("/api/characters", {
+        : await apiFetch("/api/characters", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -134,7 +135,7 @@ export default function CharactersPage() {
     if (!deleting) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/characters/${deleting.id}`, {
+      const res = await apiFetch(`/api/characters/${deleting.id}`, {
         method: "DELETE",
       });
       if (res.ok) {

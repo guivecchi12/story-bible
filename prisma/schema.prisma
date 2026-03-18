@@ -9,27 +9,62 @@ datasource db {
 }
 
 model User {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   name           String?
-  email          String   @unique
+  email          String       @unique
   hashedPassword String
-  role           String   @default("owner")
-  theme          String   @default("system")
+  theme          String       @default("system")
+  activeBookId   String?
+  activeBook     Book?        @relation("ActiveBook", fields: [activeBookId], references: [id])
+  books          BookMember[]
   invitations    Invitation[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Book {
+  id             String          @id @default(cuid())
+  name           String
+  description    String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  members        BookMember[]
+  invitations    Invitation[]
+  characters     Character[]
+  powers         Power[]
+  motivations    Motivation[]
+  factions       Faction[]
+  locations      Location[]
+  storyArcs      StoryArc[]
+  plotEvents     PlotEvent[]
+  timelineEvents TimelineEvent[]
+  items          Item[]
+  activeUsers    User[]          @relation("ActiveBook")
+}
+
+model BookMember {
+  bookId    String
+  userId    String
+  role      String   @default("viewer")
+  createdAt DateTime @default(now())
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, userId])
 }
 
 model Invitation {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   email     String
-  role      String   @default("viewer")
-  token     String   @unique @default(cuid())
+  role      String    @default("viewer")
+  token     String    @unique @default(cuid())
+  bookId    String
   invitedBy String
   usedAt    DateTime?
   expiresAt DateTime
-  createdAt DateTime @default(now())
-  inviter   User     @relation(fields: [invitedBy], references: [id])
+  createdAt DateTime  @default(now())
+  book      Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  inviter   User      @relation(fields: [invitedBy], references: [id])
 }
 
 model Character {
@@ -38,9 +73,11 @@ model Character {
   type           String
   description    String?
   backstory      String?
+  bookId         String
   factionId      String?
   createdAt      DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt
+  book           Book                     @relation(fields: [bookId], references: [id], onDelete: Cascade)
   faction        Faction?                 @relation(fields: [factionId], references: [id])
   items          CharacterItem[]
   locations      CharacterLocation[]
@@ -48,6 +85,8 @@ model Character {
   powers         CharacterPower[]
   plotEvents     PlotEventCharacter[]
   timelineEvents TimelineEventCharacter[]
+
+  @@index([bookId])
 }
 
 model Power {
@@ -56,9 +95,13 @@ model Power {
   effects    String?
   rules      String?
   weaknesses String?
+  bookId     String
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
+  book       Book             @relation(fields: [bookId], references: [id], onDelete: Cascade)
   characters CharacterPower[]
+
+  @@index([bookId])
 }
 
 model CharacterPower {
@@ -78,10 +121,14 @@ model Motivation {
   name        String
   description String?
   category    String
+  bookId      String
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
+  book        Book                  @relation(fields: [bookId], references: [id], onDelete: Cascade)
   characters  CharacterMotivation[]
   factions    FactionMotivation[]
+
+  @@index([bookId])
 }
 
 model CharacterMotivation {
@@ -110,10 +157,14 @@ model Faction {
   id          String              @id @default(cuid())
   name        String
   description String?
+  bookId      String
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
+  book        Book                @relation(fields: [bookId], references: [id], onDelete: Cascade)
   characters  Character[]
   motivations FactionMotivation[]
+
+  @@index([bookId])
 }
 
 model Location {
@@ -123,15 +174,19 @@ model Location {
   description    String?
   climate        String?
   culture        String?
+  bookId         String
   parentId       String?
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
+  book           Book                @relation(fields: [bookId], references: [id], onDelete: Cascade)
   characters     CharacterLocation[]
   items          Item[]
   parent         Location?           @relation("LocationHierarchy", fields: [parentId], references: [id])
   children       Location[]          @relation("LocationHierarchy")
   plotEvents     PlotEvent[]
   timelineEvents TimelineEvent[]
+
+  @@index([bookId])
 }
 
 model CharacterLocation {
@@ -150,12 +205,16 @@ model StoryArc {
   description String?
   type        String
   status      String      @default("planned")
+  bookId      String
   parentArcId String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  book        Book        @relation(fields: [bookId], references: [id], onDelete: Cascade)
   plotEvents  PlotEvent[]
   parentArc   StoryArc?   @relation("ArcHierarchy", fields: [parentArcId], references: [id])
   subPlots    StoryArc[]  @relation("ArcHierarchy")
+
+  @@index([bookId])
 }
 
 model PlotEvent {
@@ -164,16 +223,20 @@ model PlotEvent {
   description     String?
   consequence     String?
   order           Int                  @default(0)
+  bookId          String
   storyArcId      String
   locationId      String?
   timelineEventId String?
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
+  book            Book                 @relation(fields: [bookId], references: [id], onDelete: Cascade)
   location        Location?            @relation(fields: [locationId], references: [id])
   storyArc        StoryArc             @relation(fields: [storyArcId], references: [id], onDelete: Cascade)
   timelineEvent   TimelineEvent?       @relation(fields: [timelineEventId], references: [id])
   characters      PlotEventCharacter[]
   items           PlotEventItem[]
+
+  @@index([bookId])
 }
 
 model PlotEventCharacter {
@@ -193,12 +256,16 @@ model TimelineEvent {
   inWorldDate String?
   era         String?
   order       Int                      @default(0)
+  bookId      String
   locationId  String?
   createdAt   DateTime                 @default(now())
   updatedAt   DateTime                 @updatedAt
+  book        Book                     @relation(fields: [bookId], references: [id], onDelete: Cascade)
   plotEvents  PlotEvent[]
   location    Location?                @relation(fields: [locationId], references: [id])
   characters  TimelineEventCharacter[]
+
+  @@index([bookId])
 }
 
 model TimelineEventCharacter {
@@ -218,12 +285,16 @@ model Item {
   description String?
   lore        String?
   properties  String?
+  bookId      String
   locationId  String?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
+  book        Book            @relation(fields: [bookId], references: [id], onDelete: Cascade)
   characters  CharacterItem[]
   location    Location?       @relation(fields: [locationId], references: [id])
   plotEvents  PlotEventItem[]
+
+  @@index([bookId])
 }
 
 model CharacterItem {

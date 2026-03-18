@@ -22,7 +22,7 @@ export default function HomePage() {
   const [isLogin, setIsLogin] = useState(!inviteToken);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [inviteInfo, setInviteInfo] = useState<{ email: string; role: string } | null>(null);
+  const [inviteInfo, setInviteInfo] = useState<{ email: string; role: string; bookName: string } | null>(null);
   const router = useRouter();
   const { addToast } = useToast();
 
@@ -102,7 +102,7 @@ export default function HomePage() {
             {isLogin
               ? "Sign in to manage your story"
               : inviteInfo
-                ? `You've been invited as a ${inviteInfo.role}`
+                ? `You've been invited as a ${inviteInfo.role} to ${inviteInfo.bookName}`
                 : "Create your account"}
           </CardDescription>
         </CardHeader>

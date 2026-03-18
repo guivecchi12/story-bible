@@ -1,22 +1,21 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getBookContext } from "@/lib/book-context";
 import { plotEventService } from "@/lib/services";
 import { plotEventSchema } from "@/lib/validation";
 
-export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session)
+export async function GET(req: Request) {
+  const ctx = await getBookContext(req);
+  if (!ctx)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const events = await plotEventService.getAll();
+  const events = await plotEventService.getAll(ctx.bookId);
   return NextResponse.json(events);
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session)
+  const ctx = await getBookContext(req);
+  if (!ctx)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.user.role === "viewer")
+  if (ctx.role === "viewer")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   try {
     const body = await req.json();
@@ -26,7 +25,7 @@ export async function POST(req: Request) {
         { error: parsed.error.flatten().fieldErrors },
         { status: 400 },
       );
-    const event = await plotEventService.create(parsed.data);
+    const event = await plotEventService.create(parsed.data, ctx.bookId);
     return NextResponse.json(event, { status: 201 });
   } catch {
     return NextResponse.json(

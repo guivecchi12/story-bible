@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, Loader2 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface SearchResult {
   id: string;
@@ -93,7 +94,7 @@ export default function SearchPage() {
     if (!query.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(
+      const res = await apiFetch(
         `/api/search?q=${encodeURIComponent(query.trim())}`,
       );
       if (res.ok) setResults(await res.json());

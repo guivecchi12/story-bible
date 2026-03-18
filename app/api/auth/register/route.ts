@@ -36,24 +36,59 @@ export async function POST(req: Request) {
       );
     }
 
-    const role = invitation ? invitation.role : "owner";
     const hashedPassword = await hash(password, 12);
-    const user = await prisma.user.create({
-      data: { name, email, hashedPassword, role },
-    });
 
-    // Mark invitation as used
     if (invitation) {
+      // Invited user: create user and add to the invitation's book
+      const user = await prisma.user.create({
+        data: {
+          name,
+          email,
+          hashedPassword,
+          activeBookId: invitation.bookId,
+        },
+      });
+
+      await prisma.bookMember.create({
+        data: {
+          bookId: invitation.bookId,
+          userId: user.id,
+          role: invitation.role,
+        },
+      });
+
       await prisma.invitation.update({
         where: { id: invitation.id },
         data: { usedAt: new Date() },
       });
-    }
 
-    return NextResponse.json(
-      { id: user.id, name: user.name, email: user.email },
-      { status: 201 },
-    );
+      return NextResponse.json(
+        { id: user.id, name: user.name, email: user.email },
+        { status: 201 },
+      );
+    } else {
+      // First user: create user with a default book
+      const user = await prisma.user.create({
+        data: { name, email, hashedPassword },
+      });
+
+      const book = await prisma.book.create({
+        data: {
+          name: "My Story Bible",
+          members: { create: { userId: user.id, role: "owner" } },
+        },
+      });
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { activeBookId: book.id },
+      });
+
+      return NextResponse.json(
+        { id: user.id, name: user.name, email: user.email },
+        { status: 201 },
+      );
+    }
   } catch (error) {
     console.error("REGISTER ERROR:", error);
     return NextResponse.json(

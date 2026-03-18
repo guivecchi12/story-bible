@@ -15,6 +15,7 @@ import { FormField } from "@/components/shared";
 import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
 import { Pencil, Trash2 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface Location {
   id: string;
@@ -47,7 +48,7 @@ export default function LocationsPage() {
   const { addToast } = useToast();
 
   const fetchData = async () => {
-    const res = await fetch("/api/locations");
+    const res = await apiFetch("/api/locations");
     if (res.ok) setLocations(await res.json());
     setLoading(false);
   };
@@ -86,12 +87,12 @@ export default function LocationsPage() {
     try {
       const payload = { ...form, parentId: form.parentId || null };
       const res = editing
-        ? await fetch(`/api/locations/${editing.id}`, {
+        ? await apiFetch(`/api/locations/${editing.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           })
-        : await fetch("/api/locations", {
+        : await apiFetch("/api/locations", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -116,7 +117,7 @@ export default function LocationsPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     setSaving(true);
-    const res = await fetch(`/api/locations/${deleting.id}`, {
+    const res = await apiFetch(`/api/locations/${deleting.id}`, {
       method: "DELETE",
     });
     if (res.ok) {

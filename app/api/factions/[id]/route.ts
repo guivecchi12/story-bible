@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getBookContext } from "@/lib/book-context";
 import { factionService } from "@/lib/services";
 import { factionSchema } from "@/lib/validation";
 
@@ -8,8 +7,8 @@ export async function GET(
   req: Request,
   { params }: { params: { id: string } },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session)
+  const ctx = await getBookContext(req);
+  if (!ctx)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const faction = await factionService.getById(params.id);
   if (!faction)
@@ -21,10 +20,10 @@ export async function PUT(
   req: Request,
   { params }: { params: { id: string } },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session)
+  const ctx = await getBookContext(req);
+  if (!ctx)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.user.role === "viewer")
+  if (ctx.role === "viewer")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   try {
     const body = await req.json();
@@ -48,10 +47,10 @@ export async function DELETE(
   req: Request,
   { params }: { params: { id: string } },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session)
+  const ctx = await getBookContext(req);
+  if (!ctx)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.user.role === "viewer")
+  if (ctx.role === "viewer")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   try {
     await factionService.delete(params.id);

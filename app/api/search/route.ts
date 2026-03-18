@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getBookContext } from "@/lib/book-context";
 import { searchService } from "@/lib/services";
 
 export async function GET(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session)
+  const ctx = await getBookContext(req);
+  if (!ctx)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q");
@@ -15,6 +14,6 @@ export async function GET(req: Request) {
       { status: 400 },
     );
   }
-  const results = await searchService.globalSearch(q.trim());
+  const results = await searchService.globalSearch(q.trim(), ctx.bookId);
   return NextResponse.json(results);
 }

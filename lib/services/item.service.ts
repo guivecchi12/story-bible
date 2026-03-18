@@ -2,8 +2,9 @@ import { prisma } from "@/lib/db";
 import { ItemInput } from "@/lib/validation";
 
 export const itemService = {
-  async getAll() {
+  async getAll(bookId: string) {
     return prisma.item.findMany({
+      where: { bookId },
       include: {
         location: true,
         characters: { include: { character: true } },
@@ -24,8 +25,8 @@ export const itemService = {
     });
   },
 
-  async create(data: ItemInput) {
-    return prisma.item.create({ data });
+  async create(data: ItemInput, bookId: string) {
+    return prisma.item.create({ data: { ...data, bookId } });
   },
 
   async update(id: string, data: Partial<ItemInput>) {

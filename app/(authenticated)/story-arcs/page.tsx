@@ -15,6 +15,7 @@ import { FormField } from "@/components/shared";
 import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
 import { Pencil, Trash2 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface StoryArc {
   id: string;
@@ -46,7 +47,7 @@ export default function StoryArcsPage() {
   const { addToast } = useToast();
 
   const fetchData = async () => {
-    const res = await fetch("/api/story-arcs");
+    const res = await apiFetch("/api/story-arcs");
     if (res.ok) setArcs(await res.json());
     setLoading(false);
   };
@@ -83,12 +84,12 @@ export default function StoryArcsPage() {
     try {
       const payload = { ...form, parentArcId: form.parentArcId || null };
       const res = editing
-        ? await fetch(`/api/story-arcs/${editing.id}`, {
+        ? await apiFetch(`/api/story-arcs/${editing.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           })
-        : await fetch("/api/story-arcs", {
+        : await apiFetch("/api/story-arcs", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -113,7 +114,7 @@ export default function StoryArcsPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     setSaving(true);
-    const res = await fetch(`/api/story-arcs/${deleting.id}`, {
+    const res = await apiFetch(`/api/story-arcs/${deleting.id}`, {
       method: "DELETE",
     });
     if (res.ok) {

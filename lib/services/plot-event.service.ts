@@ -2,8 +2,9 @@ import { prisma } from "@/lib/db";
 import { PlotEventInput } from "@/lib/validation";
 
 export const plotEventService = {
-  async getAll() {
+  async getAll(bookId: string) {
     return prisma.plotEvent.findMany({
+      where: { bookId },
       include: {
         storyArc: true,
         location: true,
@@ -28,9 +29,9 @@ export const plotEventService = {
     });
   },
 
-  async create(data: PlotEventInput) {
+  async create(data: PlotEventInput, bookId: string) {
     return prisma.plotEvent.create({
-      data,
+      data: { ...data, bookId },
       include: { storyArc: true },
     });
   },

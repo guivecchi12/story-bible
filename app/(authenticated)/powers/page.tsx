@@ -14,6 +14,7 @@ import { FormField } from "@/components/shared";
 import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
 import { Pencil, Trash2 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface Power {
   id: string;
@@ -40,7 +41,7 @@ export default function PowersPage() {
   const { addToast } = useToast();
 
   const fetchData = async () => {
-    const res = await fetch("/api/powers");
+    const res = await apiFetch("/api/powers");
     if (res.ok) setPowers(await res.json());
     setLoading(false);
   };
@@ -69,12 +70,12 @@ export default function PowersPage() {
     setSaving(true);
     try {
       const res = editing
-        ? await fetch(`/api/powers/${editing.id}`, {
+        ? await apiFetch(`/api/powers/${editing.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(form),
           })
-        : await fetch("/api/powers", {
+        : await apiFetch("/api/powers", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(form),
@@ -99,7 +100,7 @@ export default function PowersPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     setSaving(true);
-    const res = await fetch(`/api/powers/${deleting.id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/powers/${deleting.id}`, { method: "DELETE" });
     if (res.ok) {
       addToast({ title: "Power deleted" });
       setDeleteOpen(false);

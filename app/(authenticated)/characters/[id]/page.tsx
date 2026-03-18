@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/layout";
 import { ArrowLeft } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 export default function CharacterDetailPage() {
   const { id } = useParams();
@@ -15,7 +16,7 @@ export default function CharacterDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/characters/${id}`)
+    apiFetch(`/api/characters/${id}`)
       .then((r) => r.json())
       .then(setCharacter)
       .finally(() => setLoading(false));

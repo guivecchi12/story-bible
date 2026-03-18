@@ -1,6 +1,5 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +14,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserPlus, Trash2, Mail, Copy, Check } from "lucide-react";
+import { UserPlus, Trash2, Mail, Copy, Check, Users } from "lucide-react";
+import { useBook } from "@/lib/contexts/book-context";
+import { apiFetch } from "@/lib/api";
 
 interface Invitation {
   id: string;
@@ -28,11 +29,19 @@ interface Invitation {
   inviter: { name: string | null; email: string };
 }
 
+interface Member {
+  bookId: string;
+  userId: string;
+  role: string;
+  user: { id: string; name: string | null; email: string };
+}
+
 export default function SettingsPage() {
-  const { data: session } = useSession();
-  const isOwner = (session?.user as any)?.role === "owner";
+  const { activeBook } = useBook();
+  const isOwner = activeBook?.role === "owner";
 
   const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -42,14 +51,20 @@ export default function SettingsPage() {
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOwner) fetchInvitations();
-  }, [isOwner]);
+    if (isOwner && activeBook) {
+      fetchData();
+    }
+  }, [isOwner, activeBook?.id]);
 
-  async function fetchInvitations() {
+  async function fetchData() {
     setLoading(true);
     try {
-      const res = await fetch("/api/invitations");
-      if (res.ok) setInvitations(await res.json());
+      const [invRes, memRes] = await Promise.all([
+        apiFetch("/api/invitations"),
+        apiFetch(`/api/books/${activeBook!.id}/members`),
+      ]);
+      if (invRes.ok) setInvitations(await invRes.json());
+      if (memRes.ok) setMembers(await memRes.json());
     } finally {
       setLoading(false);
     }
@@ -60,7 +75,7 @@ export default function SettingsPage() {
     setSubmitting(true);
     setError("");
     try {
-      const res = await fetch("/api/invitations", {
+      const res = await apiFetch("/api/invitations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, role }),
@@ -73,15 +88,24 @@ export default function SettingsPage() {
       setEmail("");
       setRole("collaborator");
       setDialogOpen(false);
-      fetchInvitations();
+      fetchData();
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleRevoke(id: string) {
-    await fetch(`/api/invitations/${id}`, { method: "DELETE" });
-    fetchInvitations();
+    await apiFetch(`/api/invitations/${id}`, { method: "DELETE" });
+    fetchData();
+  }
+
+  async function handleRemoveMember(userId: string) {
+    await apiFetch(`/api/books/${activeBook!.id}/members`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    fetchData();
   }
 
   function copyInviteLink(token: string) {
@@ -112,7 +136,9 @@ export default function SettingsPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-          <p className="text-muted-foreground mt-1">Manage invitations and user access</p>
+          <p className="text-muted-foreground mt-1">
+            Manage {activeBook?.name || "book"} members and invitations
+          </p>
         </div>
         <Button onClick={() => setDialogOpen(true)}>
           <UserPlus className="h-4 w-4 mr-2" />
@@ -120,6 +146,57 @@ export default function SettingsPage() {
         </Button>
       </div>
 
+      {/* Members */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Members
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          ) : members.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No members</p>
+          ) : (
+            <div className="space-y-3">
+              {members.map((member) => (
+                <div
+                  key={member.userId}
+                  className="flex items-center justify-between rounded-md border p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <p className="text-sm font-medium">
+                        {member.user.name || member.user.email}
+                      </p>
+                      {member.user.name && (
+                        <p className="text-xs text-muted-foreground">{member.user.email}</p>
+                      )}
+                    </div>
+                    <Badge variant={member.role === "owner" ? "default" : "secondary"} className="capitalize">
+                      {member.role}
+                    </Badge>
+                  </div>
+                  {member.role !== "owner" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveMember(member.userId)}
+                      title="Remove member"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Active Invitations */}
       <Card>
         <CardHeader>
           <CardTitle>Active Invitations</CardTitle>
@@ -212,7 +289,7 @@ export default function SettingsPage() {
         <DialogHeader>
           <DialogTitle>Invite User</DialogTitle>
           <DialogDescription>
-            Send an invitation to collaborate on your story bible.
+            Send an invitation to collaborate on {activeBook?.name || "this book"}.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleInvite} className="space-y-4">

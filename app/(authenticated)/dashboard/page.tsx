@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Users,
@@ -13,7 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-async function getCounts() {
+async function getCounts(bookId: string) {
   const [
     characters,
     powers,
@@ -25,15 +27,15 @@ async function getCounts() {
     timelineEvents,
     items,
   ] = await Promise.all([
-    prisma.character.count(),
-    prisma.power.count(),
-    prisma.motivation.count(),
-    prisma.faction.count(),
-    prisma.location.count(),
-    prisma.storyArc.count(),
-    prisma.plotEvent.count(),
-    prisma.timelineEvent.count(),
-    prisma.item.count(),
+    prisma.character.count({ where: { bookId } }),
+    prisma.power.count({ where: { bookId } }),
+    prisma.motivation.count({ where: { bookId } }),
+    prisma.faction.count({ where: { bookId } }),
+    prisma.location.count({ where: { bookId } }),
+    prisma.storyArc.count({ where: { bookId } }),
+    prisma.plotEvent.count({ where: { bookId } }),
+    prisma.timelineEvent.count({ where: { bookId } }),
+    prisma.item.count({ where: { bookId } }),
   ]);
   return {
     characters,
@@ -48,14 +50,16 @@ async function getCounts() {
   };
 }
 
-async function getRecentActivity() {
+async function getRecentActivity(bookId: string) {
   const [recentCharacters, recentEvents] = await Promise.all([
     prisma.character.findMany({
+      where: { bookId },
       take: 5,
       orderBy: { updatedAt: "desc" },
       select: { id: true, name: true, type: true, updatedAt: true },
     }),
     prisma.plotEvent.findMany({
+      where: { bookId },
       take: 5,
       orderBy: { updatedAt: "desc" },
       include: { storyArc: { select: { title: true } } },
@@ -65,8 +69,29 @@ async function getRecentActivity() {
 }
 
 export default async function DashboardPage() {
-  const counts = await getCounts();
-  const activity = await getRecentActivity();
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id;
+  const user = userId
+    ? await prisma.user.findUnique({
+        where: { id: userId },
+        select: { activeBookId: true },
+      })
+    : null;
+  const bookId = user?.activeBookId;
+
+  if (!bookId) {
+    return (
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground mt-1">
+          Select or create a book to get started.
+        </p>
+      </div>
+    );
+  }
+
+  const counts = await getCounts(bookId);
+  const activity = await getRecentActivity(bookId);
 
   const stats = [
     {

@@ -15,6 +15,7 @@ import { FormField } from "@/components/shared";
 import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
 import { Pencil, Trash2 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface Motivation {
   id: string;
@@ -39,7 +40,7 @@ export default function MotivationsPage() {
   const { addToast } = useToast();
 
   const fetchData = async () => {
-    const res = await fetch("/api/motivations");
+    const res = await apiFetch("/api/motivations");
     if (res.ok) setMotivations(await res.json());
     setLoading(false);
   };
@@ -67,12 +68,12 @@ export default function MotivationsPage() {
     setSaving(true);
     try {
       const res = editing
-        ? await fetch(`/api/motivations/${editing.id}`, {
+        ? await apiFetch(`/api/motivations/${editing.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(form),
           })
-        : await fetch("/api/motivations", {
+        : await apiFetch("/api/motivations", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(form),
@@ -97,7 +98,7 @@ export default function MotivationsPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     setSaving(true);
-    const res = await fetch(`/api/motivations/${deleting.id}`, {
+    const res = await apiFetch(`/api/motivations/${deleting.id}`, {
       method: "DELETE",
     });
     if (res.ok) {

@@ -19,9 +19,12 @@ import {
   Settings,
   Menu,
   X,
+  ChevronDown,
+  Plus,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useBook } from "@/lib/contexts/book-context";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -41,8 +44,37 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const isOwner = (session?.user as any)?.role === "owner";
+  const { books, activeBook, switchBook, refreshBooks } = useBook();
+  const isOwner = activeBook?.role === "owner";
   const [open, setOpen] = useState(false);
+  const [bookMenuOpen, setBookMenuOpen] = useState(false);
+  const [creatingBook, setCreatingBook] = useState(false);
+  const [newBookName, setNewBookName] = useState("");
+  const bookMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (bookMenuRef.current && !bookMenuRef.current.contains(e.target as Node)) {
+        setBookMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  async function handleCreateBook(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newBookName.trim()) return;
+    await fetch("/api/books", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newBookName.trim() }),
+    });
+    setNewBookName("");
+    setCreatingBook(false);
+    setBookMenuOpen(false);
+    refreshBooks();
+  }
 
   return (
     <>
@@ -67,6 +99,65 @@ export function Sidebar() {
             Story Bible
           </Link>
         </div>
+
+        {/* Book Switcher */}
+        {books.length > 0 && (
+          <div className="px-4 pt-4 pb-2" ref={bookMenuRef}>
+            <div className="relative">
+              <button
+                onClick={() => setBookMenuOpen(!bookMenuOpen)}
+                className="flex w-full items-center justify-between rounded-md border bg-background px-3 py-2 text-sm hover:bg-accent transition-colors"
+              >
+                <span className="truncate font-medium">{activeBook?.name || "Select book"}</span>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", bookMenuOpen && "rotate-180")} />
+              </button>
+              {bookMenuOpen && (
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-md border bg-background shadow-lg">
+                  <div className="max-h-48 overflow-y-auto p-1">
+                    {books.map((book) => (
+                      <button
+                        key={book.id}
+                        onClick={() => { switchBook(book.id); setBookMenuOpen(false); }}
+                        className={cn(
+                          "flex w-full items-center justify-between rounded-sm px-3 py-2 text-sm transition-colors",
+                          book.id === activeBook?.id ? "bg-primary text-primary-foreground" : "hover:bg-accent",
+                        )}
+                      >
+                        <span className="truncate">{book.name}</span>
+                        <span className="text-xs opacity-70 capitalize">{book.role}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="border-t p-1">
+                    {creatingBook ? (
+                      <form onSubmit={handleCreateBook} className="flex gap-1 p-1">
+                        <input
+                          autoFocus
+                          value={newBookName}
+                          onChange={(e) => setNewBookName(e.target.value)}
+                          placeholder="Book name..."
+                          className="flex-1 rounded-sm border bg-background px-2 py-1 text-sm"
+                        />
+                        <button type="submit" className="rounded-sm bg-primary px-2 py-1 text-xs text-primary-foreground">
+                          Add
+                        </button>
+                      </form>
+                    ) : (
+                      <button
+                        onClick={() => setCreatingBook(true)}
+                        className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm text-muted-foreground hover:bg-accent transition-colors"
+                      >
+                        <Plus className="h-3 w-3" />
+                        New Book
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <nav className="space-y-1 p-4">
           {navItems.map((item) => {
             const isActive =

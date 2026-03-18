@@ -2,8 +2,9 @@ import { prisma } from "@/lib/db";
 import { MotivationInput } from "@/lib/validation";
 
 export const motivationService = {
-  async getAll() {
+  async getAll(bookId: string) {
     return prisma.motivation.findMany({
+      where: { bookId },
       include: {
         characters: { include: { character: true } },
         factions: { include: { faction: true } },
@@ -22,8 +23,8 @@ export const motivationService = {
     });
   },
 
-  async create(data: MotivationInput) {
-    return prisma.motivation.create({ data });
+  async create(data: MotivationInput, bookId: string) {
+    return prisma.motivation.create({ data: { ...data, bookId } });
   },
 
   async update(id: string, data: Partial<MotivationInput>) {

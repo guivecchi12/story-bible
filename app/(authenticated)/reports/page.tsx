@@ -20,6 +20,7 @@ import {
   Shield,
   Loader2,
 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 const reports = [
   {
@@ -64,7 +65,7 @@ export default function ReportsPage() {
   const generateReport = async (type: string) => {
     setGenerating(type);
     try {
-      const res = await fetch("/api/reports", {
+      const res = await apiFetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type }),

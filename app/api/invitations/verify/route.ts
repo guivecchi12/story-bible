@@ -11,11 +11,12 @@ export async function GET(req: Request) {
 
   const invitation = await prisma.invitation.findUnique({
     where: { token },
+    include: { book: { select: { name: true } } },
   });
 
   if (!invitation || invitation.usedAt || new Date(invitation.expiresAt) <= new Date()) {
     return NextResponse.json({ error: "Invalid or expired invitation" }, { status: 404 });
   }
 
-  return NextResponse.json({ email: invitation.email, role: invitation.role });
+  return NextResponse.json({ email: invitation.email, role: invitation.role, bookName: invitation.book.name });
 }

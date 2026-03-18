@@ -2,8 +2,9 @@ import { prisma } from "@/lib/db";
 import { LocationInput } from "@/lib/validation";
 
 export const locationService = {
-  async getAll() {
+  async getAll(bookId: string) {
     return prisma.location.findMany({
+      where: { bookId },
       include: {
         parent: true,
         children: true,
@@ -28,8 +29,8 @@ export const locationService = {
     });
   },
 
-  async create(data: LocationInput) {
-    return prisma.location.create({ data });
+  async create(data: LocationInput, bookId: string) {
+    return prisma.location.create({ data: { ...data, bookId } });
   },
 
   async update(id: string, data: Partial<LocationInput>) {

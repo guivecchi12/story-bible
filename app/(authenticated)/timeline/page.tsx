@@ -15,6 +15,7 @@ import { FormField } from "@/components/shared";
 import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
 import { Pencil, Trash2 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface TimelineEvent {
   id: string;
@@ -50,8 +51,8 @@ export default function TimelinePage() {
 
   const fetchData = async () => {
     const [eRes, lRes] = await Promise.all([
-      fetch("/api/timeline"),
-      fetch("/api/locations"),
+      apiFetch("/api/timeline"),
+      apiFetch("/api/locations"),
     ]);
     if (eRes.ok) setEvents(await eRes.json());
     if (lRes.ok) setLocations(await lRes.json());
@@ -96,12 +97,12 @@ export default function TimelinePage() {
         locationId: form.locationId || null,
       };
       const res = editing
-        ? await fetch(`/api/timeline/${editing.id}`, {
+        ? await apiFetch(`/api/timeline/${editing.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           })
-        : await fetch("/api/timeline", {
+        : await apiFetch("/api/timeline", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -126,7 +127,7 @@ export default function TimelinePage() {
   const handleDelete = async () => {
     if (!deleting) return;
     setSaving(true);
-    const res = await fetch(`/api/timeline/${deleting.id}`, {
+    const res = await apiFetch(`/api/timeline/${deleting.id}`, {
       method: "DELETE",
     });
     if (res.ok) {

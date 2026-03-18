@@ -2,8 +2,9 @@ import { prisma } from "@/lib/db";
 import { StoryArcInput } from "@/lib/validation";
 
 export const storyArcService = {
-  async getAll() {
+  async getAll(bookId: string) {
     return prisma.storyArc.findMany({
+      where: { bookId },
       include: {
         parentArc: true,
         subPlots: true,
@@ -31,8 +32,8 @@ export const storyArcService = {
     });
   },
 
-  async create(data: StoryArcInput) {
-    return prisma.storyArc.create({ data });
+  async create(data: StoryArcInput, bookId: string) {
+    return prisma.storyArc.create({ data: { ...data, bookId } });
   },
 
   async update(id: string, data: Partial<StoryArcInput>) {

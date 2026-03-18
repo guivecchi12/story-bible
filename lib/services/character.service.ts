@@ -2,8 +2,9 @@ import { prisma } from "@/lib/db";
 import { CharacterInput } from "@/lib/validation";
 
 export const characterService = {
-  async getAll() {
+  async getAll(bookId: string) {
     return prisma.character.findMany({
+      where: { bookId },
       include: {
         faction: true,
         powers: { include: { power: true } },
@@ -30,9 +31,9 @@ export const characterService = {
     });
   },
 
-  async create(data: CharacterInput) {
+  async create(data: CharacterInput, bookId: string) {
     return prisma.character.create({
-      data,
+      data: { ...data, bookId },
       include: { faction: true },
     });
   },

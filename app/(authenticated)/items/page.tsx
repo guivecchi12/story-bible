@@ -15,6 +15,7 @@ import { FormField } from "@/components/shared";
 import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
 import { Pencil, Trash2 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface Item {
   id: string;
@@ -50,8 +51,8 @@ export default function ItemsPage() {
 
   const fetchData = async () => {
     const [iRes, lRes] = await Promise.all([
-      fetch("/api/items"),
-      fetch("/api/locations"),
+      apiFetch("/api/items"),
+      apiFetch("/api/locations"),
     ]);
     if (iRes.ok) setItems(await iRes.json());
     if (lRes.ok) setLocations(await lRes.json());
@@ -92,12 +93,12 @@ export default function ItemsPage() {
     try {
       const payload = { ...form, locationId: form.locationId || null };
       const res = editing
-        ? await fetch(`/api/items/${editing.id}`, {
+        ? await apiFetch(`/api/items/${editing.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           })
-        : await fetch("/api/items", {
+        : await apiFetch("/api/items", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -122,7 +123,7 @@ export default function ItemsPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     setSaving(true);
-    const res = await fetch(`/api/items/${deleting.id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/items/${deleting.id}`, { method: "DELETE" });
     if (res.ok) {
       addToast({ title: "Deleted" });
       setDeleteOpen(false);

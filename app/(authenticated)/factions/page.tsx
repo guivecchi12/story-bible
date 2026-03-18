@@ -14,6 +14,7 @@ import { FormField } from "@/components/shared";
 import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
 import { Pencil, Trash2 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface Faction {
   id: string;
@@ -34,7 +35,7 @@ export default function FactionsPage() {
   const { addToast } = useToast();
 
   const fetchData = async () => {
-    const res = await fetch("/api/factions");
+    const res = await apiFetch("/api/factions");
     if (res.ok) setFactions(await res.json());
     setLoading(false);
   };
@@ -58,12 +59,12 @@ export default function FactionsPage() {
     setSaving(true);
     try {
       const res = editing
-        ? await fetch(`/api/factions/${editing.id}`, {
+        ? await apiFetch(`/api/factions/${editing.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(form),
           })
-        : await fetch("/api/factions", {
+        : await apiFetch("/api/factions", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(form),
@@ -88,7 +89,7 @@ export default function FactionsPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     setSaving(true);
-    const res = await fetch(`/api/factions/${deleting.id}`, {
+    const res = await apiFetch(`/api/factions/${deleting.id}`, {
       method: "DELETE",
     });
     if (res.ok) {

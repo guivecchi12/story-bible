@@ -14,6 +14,7 @@ import { FormField } from "@/components/shared";
 import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
 import { Pencil, Trash2 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface PlotEvent {
   id: string;
@@ -53,9 +54,9 @@ export default function PlotEventsPage() {
 
   const fetchData = async () => {
     const [eRes, aRes, lRes] = await Promise.all([
-      fetch("/api/plot-events"),
-      fetch("/api/story-arcs"),
-      fetch("/api/locations"),
+      apiFetch("/api/plot-events"),
+      apiFetch("/api/story-arcs"),
+      apiFetch("/api/locations"),
     ]);
     if (eRes.ok) setEvents(await eRes.json());
     if (aRes.ok) setStoryArcs(await aRes.json());
@@ -101,12 +102,12 @@ export default function PlotEventsPage() {
         locationId: form.locationId || null,
       };
       const res = editing
-        ? await fetch(`/api/plot-events/${editing.id}`, {
+        ? await apiFetch(`/api/plot-events/${editing.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           })
-        : await fetch("/api/plot-events", {
+        : await apiFetch("/api/plot-events", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -131,7 +132,7 @@ export default function PlotEventsPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     setSaving(true);
-    const res = await fetch(`/api/plot-events/${deleting.id}`, {
+    const res = await apiFetch(`/api/plot-events/${deleting.id}`, {
       method: "DELETE",
     });
     if (res.ok) {

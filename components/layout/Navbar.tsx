@@ -4,9 +4,11 @@ import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LogOut, User } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useBook } from "@/lib/contexts/book-context";
 
 export function Navbar() {
   const { data: session } = useSession();
+  const { activeBook } = useBook();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-end border-b bg-background/95 backdrop-blur px-6 md:px-8">
@@ -19,7 +21,7 @@ export function Navbar() {
               {session.user.name || session.user.email}
             </span>
             <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
-              {session.user.role}
+              {activeBook?.role || "—"}
             </span>
           </div>
           <Button
