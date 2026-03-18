@@ -16,9 +16,11 @@ import {
   Gem,
   FileText,
   Search,
+  Settings,
   Menu,
   X,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
 
 const navItems = [
@@ -38,6 +40,8 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const isOwner = (session?.user as any)?.role === "owner";
   const [open, setOpen] = useState(false);
 
   return (
@@ -84,6 +88,24 @@ export function Sidebar() {
               </Link>
             );
           })}
+          {isOwner && (
+            <>
+              <div className="my-2 border-t" />
+              <Link
+                href="/settings"
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  pathname === "/settings"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                )}
+              >
+                <Settings className="h-4 w-4" />
+                Settings
+              </Link>
+            </>
+          )}
         </nav>
       </aside>
       {open && (

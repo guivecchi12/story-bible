@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,11 +17,30 @@ import { BookOpen } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 export default function HomePage() {
-  const [isLogin, setIsLogin] = useState(true);
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get("invite");
+  const [isLogin, setIsLogin] = useState(!inviteToken);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [inviteInfo, setInviteInfo] = useState<{ email: string; role: string } | null>(null);
   const router = useRouter();
   const { addToast } = useToast();
+
+  useEffect(() => {
+    if (inviteToken) {
+      fetch(`/api/invitations/verify?token=${inviteToken}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data) {
+            setInviteInfo(data);
+            setForm((f) => ({ ...f, email: data.email }));
+          } else {
+            addToast({ title: "Invalid invitation", description: "This invite link is invalid or expired", variant: "destructive" });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [inviteToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +99,11 @@ export default function HomePage() {
           </div>
           <CardTitle className="text-2xl">Story Bible</CardTitle>
           <CardDescription>
-            {isLogin ? "Sign in to manage your story" : "Create your account"}
+            {isLogin
+              ? "Sign in to manage your story"
+              : inviteInfo
+                ? `You've been invited as a ${inviteInfo.role}`
+                : "Create your account"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -106,6 +129,8 @@ export default function HomePage() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="you@example.com"
                 required
+                readOnly={!!inviteInfo && !isLogin}
+                className={inviteInfo && !isLogin ? "bg-muted" : ""}
               />
             </div>
             <div className="space-y-2">

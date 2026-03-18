@@ -13,3 +13,10 @@ export const registerSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
+
+export const inviteSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  role: z.enum(["collaborator", "viewer"]),
+});
+
+export type InviteInput = z.infer<typeof inviteSchema>;

@@ -24,7 +24,7 @@ export async function PUT(
   const session = await getServerSession(authOptions);
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.user.role === "collaborator")
+  if (session.user.role === "viewer")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   try {
     const body = await req.json();
@@ -51,7 +51,7 @@ export async function DELETE(
   const session = await getServerSession(authOptions);
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.user.role === "collaborator")
+  if (session.user.role === "viewer")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   try {
     await characterService.delete(params.id);
