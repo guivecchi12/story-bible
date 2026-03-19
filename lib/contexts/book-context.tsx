@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
+import { useSession } from "next-auth/react";
 import { setActiveBookId } from "@/lib/api";
 
 interface Book {
@@ -27,6 +34,7 @@ const BookContext = createContext<BookContextType>({
 });
 
 export function BookProvider({ children }: { children: React.ReactNode }) {
+  const { status } = useSession();
   const [books, setBooks] = useState<Book[]>([]);
   const [activeBook, setActiveBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,8 +58,13 @@ export function BookProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    refreshBooks();
-  }, [refreshBooks]);
+    // Only fetch books when authenticated
+    if (status === "authenticated") {
+      refreshBooks();
+    } else if (status === "unauthenticated") {
+      setLoading(false);
+    }
+  }, [status, refreshBooks]);
 
   useEffect(() => {
     setActiveBookId(activeBook?.id ?? null);
@@ -69,7 +82,9 @@ export function BookProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <BookContext.Provider value={{ books, activeBook, loading, switchBook, refreshBooks }}>
+    <BookContext.Provider
+      value={{ books, activeBook, loading, switchBook, refreshBooks }}
+    >
       {children}
     </BookContext.Provider>
   );
