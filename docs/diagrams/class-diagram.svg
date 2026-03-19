@@ -1,0 +1,181 @@
+<svg viewBox="0 0 960 700" xmlns="http://www.w3.org/2000/svg" font-family="monospace" font-size="11">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="960" height="700" fill="#1a1a2e"/>
+
+  <!-- Title -->
+  <text x="480" y="28" text-anchor="middle" font-size="15" font-weight="bold" fill="#f5c842">Story Bible — Class Diagram</text>
+
+  <!-- USER -->
+  <g transform="translate(30,50)">
+    <rect width="155" height="110" rx="4" fill="#2a2a4a" stroke="#f5c842" stroke-width="1.5"/>
+    <rect width="155" height="22" rx="4" fill="#f5c842"/>
+    <text x="77" y="15" text-anchor="middle" font-weight="bold" fill="#1a1a2e">User</text>
+    <line x1="0" y1="22" x2="155" y2="22" stroke="#f5c842" stroke-width="1"/>
+    <text x="8" y="38" fill="#aaa">+ id: String</text>
+    <text x="8" y="52" fill="#aaa">+ name: String</text>
+    <text x="8" y="66" fill="#aaa">+ email: String</text>
+    <text x="8" y="80" fill="#aaa">+ passwordHash: String</text>
+    <text x="8" y="94" fill="#aaa">+ createdAt: DateTime</text>
+  </g>
+
+  <!-- BOOK -->
+  <g transform="translate(370,50)">
+    <rect width="175" height="110" rx="4" fill="#2a2a4a" stroke="#f5c842" stroke-width="1.5"/>
+    <rect width="175" height="22" rx="4" fill="#f5c842"/>
+    <text x="87" y="15" text-anchor="middle" font-weight="bold" fill="#1a1a2e">Book</text>
+    <line x1="0" y1="22" x2="175" y2="22" stroke="#f5c842" stroke-width="1"/>
+    <text x="8" y="38" fill="#aaa">+ id: String</text>
+    <text x="8" y="52" fill="#aaa">+ name: String</text>
+    <text x="8" y="66" fill="#aaa">+ description: String</text>
+    <text x="8" y="80" fill="#aaa">+ createdAt: DateTime</text>
+  </g>
+
+  <!-- BOOKMEMBER -->
+  <g transform="translate(220,220)">
+    <rect width="165" height="110" rx="4" fill="#2a2a4a" stroke="#c084fc" stroke-width="1.5"/>
+    <rect width="165" height="22" rx="4" fill="#c084fc"/>
+    <text x="82" y="15" text-anchor="middle" font-weight="bold" fill="#1a1a2e">BookMember</text>
+    <line x1="0" y1="22" x2="165" y2="22" stroke="#c084fc" stroke-width="1"/>
+    <text x="8" y="38" fill="#aaa">+ bookId: String (FK)</text>
+    <text x="8" y="52" fill="#aaa">+ userId: String (FK)</text>
+    <text x="8" y="66" fill="#aaa">+ role: String</text>
+    <text x="8" y="80" fill="#aaa">+ joinedAt: DateTime</text>
+  </g>
+
+  <!-- INVITATION -->
+  <g transform="translate(560,220)">
+    <rect width="175" height="138" rx="4" fill="#2a2a4a" stroke="#c084fc" stroke-width="1.5"/>
+    <rect width="175" height="22" rx="4" fill="#c084fc"/>
+    <text x="87" y="15" text-anchor="middle" font-weight="bold" fill="#1a1a2e">Invitation</text>
+    <line x1="0" y1="22" x2="175" y2="22" stroke="#c084fc" stroke-width="1"/>
+    <text x="8" y="38" fill="#aaa">+ id: String</text>
+    <text x="8" y="52" fill="#aaa">+ email: String</text>
+    <text x="8" y="66" fill="#aaa">+ role: String</text>
+    <text x="8" y="80" fill="#aaa">+ token: String</text>
+    <text x="8" y="94" fill="#aaa">+ bookId: String (FK)</text>
+    <text x="8" y="108" fill="#aaa">+ invitedBy: String (FK)</text>
+    <text x="8" y="122" fill="#aaa">+ expiresAt: DateTime</text>
+  </g>
+
+  <!-- CHARACTER -->
+  <g transform="translate(30,430)">
+    <rect width="150" height="96" rx="4" fill="#2a2a4a" stroke="#34d399" stroke-width="1.5"/>
+    <rect width="150" height="22" rx="4" fill="#34d399"/>
+    <text x="75" y="15" text-anchor="middle" font-weight="bold" fill="#1a1a2e">Character</text>
+    <line x1="0" y1="22" x2="150" y2="22" stroke="#34d399" stroke-width="1"/>
+    <text x="8" y="38" fill="#aaa">+ id: String</text>
+    <text x="8" y="52" fill="#aaa">+ name: String</text>
+    <text x="8" y="66" fill="#aaa">+ description: String</text>
+    <text x="8" y="80" fill="#aaa">+ bookId: String (FK)</text>
+  </g>
+
+  <!-- POWER -->
+  <g transform="translate(200,430)">
+    <rect width="140" height="96" rx="4" fill="#2a2a4a" stroke="#34d399" stroke-width="1.5"/>
+    <rect width="140" height="22" rx="4" fill="#34d399"/>
+    <text x="65" y="15" text-anchor="middle" font-weight="bold" fill="#1a1a2e">Power</text>
+    <line x1="0" y1="22" x2="140" y2="22" stroke="#34d399" stroke-width="1"/>
+    <text x="8" y="38" fill="#aaa">+ id: String</text>
+    <text x="8" y="52" fill="#aaa">+ name: String</text>
+    <text x="8" y="66" fill="#aaa">+ description: String</text>
+    <text x="8" y="80" fill="#aaa">+ bookId: String (FK)</text>
+  </g>
+
+  <!-- FACTION -->
+  <g transform="translate(350,430)">
+    <rect width="140" height="96" rx="4" fill="#2a2a4a" stroke="#34d399" stroke-width="1.5"/>
+    <rect width="140" height="22" rx="4" fill="#34d399"/>
+    <text x="65" y="15" text-anchor="middle" font-weight="bold" fill="#1a1a2e">Faction</text>
+    <line x1="0" y1="22" x2="140" y2="22" stroke="#34d399" stroke-width="1"/>
+    <text x="8" y="38" fill="#aaa">+ id: String</text>
+    <text x="8" y="52" fill="#aaa">+ name: String</text>
+    <text x="8" y="66" fill="#aaa">+ description: String</text>
+    <text x="8" y="80" fill="#aaa">+ bookId: String (FK)</text>
+  </g>
+
+  <!-- LOCATION -->
+  <g transform="translate(500,430)">
+    <rect width="140" height="96" rx="4" fill="#2a2a4a" stroke="#34d399" stroke-width="1.5"/>
+    <rect width="140" height="22" rx="4" fill="#34d399"/>
+    <text x="65" y="15" text-anchor="middle" font-weight="bold" fill="#1a1a2e">Location</text>
+    <line x1="0" y1="22" x2="140" y2="22" stroke="#34d399" stroke-width="1"/>
+    <text x="8" y="38" fill="#aaa">+ id: String</text>
+    <text x="8" y="52" fill="#aaa">+ name: String</text>
+    <text x="8" y="66" fill="#aaa">+ description: String</text>
+    <text x="8" y="80" fill="#aaa">+ bookId: String (FK)</text>
+  </g>
+
+  <!-- STORYARC -->
+  <g transform="translate(650,430)">
+    <rect width="140" height="96" rx="4" fill="#2a2a4a" stroke="#34d399" stroke-width="1.5"/>
+    <rect width="140" height="22" rx="4" fill="#34d399"/>
+    <text x="65" y="15" text-anchor="middle" font-weight="bold" fill="#1a1a2e">StoryArc</text>
+    <line x1="0" y1="22" x2="140" y2="22" stroke="#34d399" stroke-width="1"/>
+    <text x="8" y="38" fill="#aaa">+ id: String</text>
+    <text x="8" y="52" fill="#aaa">+ title: String</text>
+    <text x="8" y="66" fill="#aaa">+ summary: String</text>
+    <text x="8" y="80" fill="#aaa">+ bookId: String (FK)</text>
+  </g>
+
+  <!-- PLOTEVENT -->
+  <g transform="translate(30,590)">
+    <rect width="155" height="96" rx="4" fill="#2a2a4a" stroke="#34d399" stroke-width="1.5"/>
+    <rect width="155" height="22" rx="4" fill="#34d399"/>
+    <text x="77" y="15" text-anchor="middle" font-weight="bold" fill="#1a1a2e">PlotEvent</text>
+    <line x1="0" y1="22" x2="155" y2="22" stroke="#34d399" stroke-width="1"/>
+    <text x="8" y="38" fill="#aaa">+ id: String</text>
+    <text x="8" y="52" fill="#aaa">+ title: String</text>
+    <text x="8" y="66" fill="#aaa">+ eventDate: DateTime</text>
+    <text x="8" y="80" fill="#aaa">+ bookId: String (FK)</text>
+  </g>
+
+  <!-- ITEM -->
+  <g transform="translate(210,590)">
+    <rect width="140" height="96" rx="4" fill="#2a2a4a" stroke="#34d399" stroke-width="1.5"/>
+    <rect width="140" height="22" rx="4" fill="#34d399"/>
+    <text x="65" y="15" text-anchor="middle" font-weight="bold" fill="#1a1a2e">Item</text>
+    <line x1="0" y1="22" x2="140" y2="22" stroke="#34d399" stroke-width="1"/>
+    <text x="8" y="38" fill="#aaa">+ id: String</text>
+    <text x="8" y="52" fill="#aaa">+ name: String</text>
+    <text x="8" y="66" fill="#aaa">+ description: String</text>
+    <text x="8" y="80" fill="#aaa">+ bookId: String (FK)</text>
+  </g>
+
+  <!-- Relationship lines -->
+  <!-- User -> BookMember -->
+  <line x1="107" y1="160" x2="265" y2="220" stroke="#888" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="155" y="195" fill="#888" font-size="9">1..*</text>
+
+  <!-- Book -> BookMember -->
+  <line x1="415" y1="160" x2="355" y2="220" stroke="#888" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="370" y="195" fill="#888" font-size="9">1..*</text>
+
+  <!-- Book -> Invitation -->
+  <line x1="500" y1="105" x2="560" y2="255" stroke="#888" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="525" y="185" fill="#888" font-size="9">1..*</text>
+
+  <!-- Book -> content entities -->
+  <line x1="457" y1="160" x2="105" y2="430" stroke="#555" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <line x1="457" y1="160" x2="265" y2="430" stroke="#555" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <line x1="457" y1="160" x2="415" y2="430" stroke="#555" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <line x1="457" y1="160" x2="565" y2="430" stroke="#555" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <line x1="457" y1="160" x2="715" y2="430" stroke="#555" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <line x1="457" y1="160" x2="107" y2="590" stroke="#555" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <line x1="457" y1="160" x2="275" y2="590" stroke="#555" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+  <!-- Legend -->
+  <rect x="800" y="430" width="140" height="80" rx="4" fill="#2a2a4a" stroke="#555" stroke-width="1"/>
+  <text x="850" y="448" text-anchor="middle" fill="#aaa" font-size="10" font-weight="bold">Legend</text>
+  <rect x="805" y="456" width="20" height="12" rx="2" fill="#f5c842"/>
+  <text x="830" y="467" fill="#aaa" font-size="9">Auth / Core</text>
+  <rect x="805" y="474" width="20" height="12" rx="2" fill="#c084fc"/>
+  <text x="830" y="485" fill="#aaa" font-size="9">Membership / Invite</text>
+  <rect x="805" y="492" width="20" height="12" rx="2" fill="#34d399"/>
+  <text x="830" y="503" fill="#aaa" font-size="9">Book Content</text>
+</svg>
