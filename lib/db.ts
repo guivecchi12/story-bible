@@ -12,7 +12,10 @@ function createPrismaClient() {
   const adapter = new PrismaNeon({
     connectionString: process.env.DATABASE_URL!,
   });
-  return new PrismaClient({ adapter });
+  return new PrismaClient({
+    adapter,
+    log: ["error", "warn"],
+  });
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
