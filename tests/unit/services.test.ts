@@ -81,6 +81,70 @@ describe("characterService", () => {
 
     expect(prismaMock.character.delete).toHaveBeenCalledWith({ where: { id: "char-1" } });
   });
+
+  it("addPower creates a characterPower record", async () => {
+    await characterService.addPower("char-1", "pow-1", 7, true, "Strong");
+
+    expect(prismaMock.characterPower.create).toHaveBeenCalledWith({
+      data: { characterId: "char-1", powerId: "pow-1", strengthLevel: 7, isPrimary: true, notes: "Strong" },
+    });
+  });
+
+  it("removePower deletes by composite key", async () => {
+    await characterService.removePower("char-1", "pow-1");
+
+    expect(prismaMock.characterPower.delete).toHaveBeenCalledWith({
+      where: { characterId_powerId: { characterId: "char-1", powerId: "pow-1" } },
+    });
+  });
+
+  it("addMotivation creates a characterMotivation record", async () => {
+    await characterService.addMotivation("char-1", "mot-1", 3, "Personal");
+
+    expect(prismaMock.characterMotivation.create).toHaveBeenCalledWith({
+      data: { characterId: "char-1", motivationId: "mot-1", priority: 3, personalNotes: "Personal" },
+    });
+  });
+
+  it("removeMotivation deletes by composite key", async () => {
+    await characterService.removeMotivation("char-1", "mot-1");
+
+    expect(prismaMock.characterMotivation.delete).toHaveBeenCalledWith({
+      where: { characterId_motivationId: { characterId: "char-1", motivationId: "mot-1" } },
+    });
+  });
+
+  it("addLocation creates a characterLocation record", async () => {
+    await characterService.addLocation("char-1", "loc-1", "Resident");
+
+    expect(prismaMock.characterLocation.create).toHaveBeenCalledWith({
+      data: { characterId: "char-1", locationId: "loc-1", role: "Resident" },
+    });
+  });
+
+  it("removeLocation deletes by composite key", async () => {
+    await characterService.removeLocation("char-1", "loc-1");
+
+    expect(prismaMock.characterLocation.delete).toHaveBeenCalledWith({
+      where: { characterId_locationId: { characterId: "char-1", locationId: "loc-1" } },
+    });
+  });
+
+  it("addItem creates a characterItem record", async () => {
+    await characterService.addItem("char-1", "item-1", "owned", "Chapter 3");
+
+    expect(prismaMock.characterItem.create).toHaveBeenCalledWith({
+      data: { characterId: "char-1", itemId: "item-1", status: "owned", acquiredAt: "Chapter 3" },
+    });
+  });
+
+  it("removeItem deletes by composite key", async () => {
+    await characterService.removeItem("char-1", "item-1");
+
+    expect(prismaMock.characterItem.delete).toHaveBeenCalledWith({
+      where: { characterId_itemId: { characterId: "char-1", itemId: "item-1" } },
+    });
+  });
 });
 
 describe("powerService", () => {
@@ -257,6 +321,22 @@ describe("factionService", () => {
     await factionService.delete("faction-1");
 
     expect(prismaMock.faction.delete).toHaveBeenCalledWith({ where: { id: "faction-1" } });
+  });
+
+  it("addMotivation creates a factionMotivation record", async () => {
+    await factionService.addMotivation("faction-1", "mot-1", 2, "Key goal");
+
+    expect(prismaMock.factionMotivation.create).toHaveBeenCalledWith({
+      data: { factionId: "faction-1", motivationId: "mot-1", priority: 2, notes: "Key goal" },
+    });
+  });
+
+  it("removeMotivation deletes by composite key", async () => {
+    await factionService.removeMotivation("faction-1", "mot-1");
+
+    expect(prismaMock.factionMotivation.delete).toHaveBeenCalledWith({
+      where: { factionId_motivationId: { factionId: "faction-1", motivationId: "mot-1" } },
+    });
   });
 });
 
@@ -457,6 +537,38 @@ describe("plotEventService", () => {
 
     expect(prismaMock.plotEvent.delete).toHaveBeenCalledWith({ where: { id: "pe-1" } });
   });
+
+  it("addCharacter creates a plotEventCharacter record", async () => {
+    await plotEventService.addCharacter("pe-1", "char-1", "Protagonist");
+
+    expect(prismaMock.plotEventCharacter.create).toHaveBeenCalledWith({
+      data: { plotEventId: "pe-1", characterId: "char-1", role: "Protagonist" },
+    });
+  });
+
+  it("removeCharacter deletes by composite key", async () => {
+    await plotEventService.removeCharacter("pe-1", "char-1");
+
+    expect(prismaMock.plotEventCharacter.delete).toHaveBeenCalledWith({
+      where: { plotEventId_characterId: { plotEventId: "pe-1", characterId: "char-1" } },
+    });
+  });
+
+  it("addItem creates a plotEventItem record", async () => {
+    await plotEventService.addItem("pe-1", "item-1", "Weapon");
+
+    expect(prismaMock.plotEventItem.create).toHaveBeenCalledWith({
+      data: { plotEventId: "pe-1", itemId: "item-1", role: "Weapon" },
+    });
+  });
+
+  it("removeItem deletes by composite key", async () => {
+    await plotEventService.removeItem("pe-1", "item-1");
+
+    expect(prismaMock.plotEventItem.delete).toHaveBeenCalledWith({
+      where: { plotEventId_itemId: { plotEventId: "pe-1", itemId: "item-1" } },
+    });
+  });
 });
 
 describe("timelineService", () => {
@@ -517,6 +629,22 @@ describe("timelineService", () => {
     await timelineService.delete("te-1");
 
     expect(prismaMock.timelineEvent.delete).toHaveBeenCalledWith({ where: { id: "te-1" } });
+  });
+
+  it("addCharacter creates a timelineEventCharacter record", async () => {
+    await timelineService.addCharacter("te-1", "char-1", "Was present");
+
+    expect(prismaMock.timelineEventCharacter.create).toHaveBeenCalledWith({
+      data: { timelineEventId: "te-1", characterId: "char-1", notes: "Was present" },
+    });
+  });
+
+  it("removeCharacter deletes by composite key", async () => {
+    await timelineService.removeCharacter("te-1", "char-1");
+
+    expect(prismaMock.timelineEventCharacter.delete).toHaveBeenCalledWith({
+      where: { timelineEventId_characterId: { timelineEventId: "te-1", characterId: "char-1" } },
+    });
   });
 });
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader, TableSkeleton } from "@/components/layout";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,7 @@ import {
 import { FormField } from "@/components/shared";
 import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
-import { Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
 interface TimelineEvent {
@@ -47,6 +48,7 @@ export default function TimelinePage() {
     locationId: "",
   });
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
   const { addToast } = useToast();
 
   const fetchData = async () => {
@@ -183,8 +185,12 @@ export default function TimelinePage() {
       <DataTable
         data={events}
         columns={columns}
+        onRowClick={(e) => router.push(`/timeline/${e.id}`)}
         actions={(e) => (
           <div className="flex gap-1">
+            <Button variant="ghost" size="icon" onClick={() => router.push(`/timeline/${e.id}`)}>
+              <Eye className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={() => openEdit(e)}>
               <Pencil className="h-4 w-4" />
             </Button>

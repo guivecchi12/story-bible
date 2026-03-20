@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader, TableSkeleton } from "@/components/layout";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
 import { FormField } from "@/components/shared";
 import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
-import { Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
 interface Faction {
@@ -32,6 +33,7 @@ export default function FactionsPage() {
   const [deleting, setDeleting] = useState<Faction | null>(null);
   const [form, setForm] = useState({ name: "", description: "" });
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
   const { addToast } = useToast();
 
   const fetchData = async () => {
@@ -138,8 +140,12 @@ export default function FactionsPage() {
       <DataTable
         data={factions}
         columns={columns}
+        onRowClick={(f) => router.push(`/factions/${f.id}`)}
         actions={(f) => (
           <div className="flex gap-1">
+            <Button variant="ghost" size="icon" onClick={() => router.push(`/factions/${f.id}`)}>
+              <Eye className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={() => openEdit(f)}>
               <Pencil className="h-4 w-4" />
             </Button>

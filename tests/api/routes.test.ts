@@ -3,6 +3,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const {
   mockGetBookContext,
   mockCharacterService,
+  mockFactionService,
+  mockPlotEventService,
+  mockTimelineService,
   mockCharacterSchema,
   mockGetServerSession,
   mockPrisma,
@@ -18,6 +21,28 @@ const {
       .fn()
       .mockResolvedValue({ id: "char-1", name: "Updated", type: "main" }),
     delete: vi.fn().mockResolvedValue({}),
+    addPower: vi.fn().mockResolvedValue({}),
+    removePower: vi.fn().mockResolvedValue({}),
+    addMotivation: vi.fn().mockResolvedValue({}),
+    removeMotivation: vi.fn().mockResolvedValue({}),
+    addLocation: vi.fn().mockResolvedValue({}),
+    removeLocation: vi.fn().mockResolvedValue({}),
+    addItem: vi.fn().mockResolvedValue({}),
+    removeItem: vi.fn().mockResolvedValue({}),
+  },
+  mockFactionService: {
+    addMotivation: vi.fn().mockResolvedValue({}),
+    removeMotivation: vi.fn().mockResolvedValue({}),
+  },
+  mockPlotEventService: {
+    addCharacter: vi.fn().mockResolvedValue({}),
+    removeCharacter: vi.fn().mockResolvedValue({}),
+    addItem: vi.fn().mockResolvedValue({}),
+    removeItem: vi.fn().mockResolvedValue({}),
+  },
+  mockTimelineService: {
+    addCharacter: vi.fn().mockResolvedValue({}),
+    removeCharacter: vi.fn().mockResolvedValue({}),
   },
   mockCharacterSchema: {
     safeParse: vi.fn().mockReturnValue({
@@ -40,7 +65,12 @@ const {
 }));
 
 vi.mock("@/lib/book-context", () => ({ getBookContext: mockGetBookContext }));
-vi.mock("@/lib/services", () => ({ characterService: mockCharacterService }));
+vi.mock("@/lib/services", () => ({
+  characterService: mockCharacterService,
+  factionService: mockFactionService,
+  plotEventService: mockPlotEventService,
+  timelineService: mockTimelineService,
+}));
 vi.mock("@/lib/validation", () => ({ characterSchema: mockCharacterSchema }));
 vi.mock("next-auth", () => ({ getServerSession: mockGetServerSession }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
@@ -53,6 +83,16 @@ import {
   DELETE,
 } from "@/app/api/characters/[id]/route";
 import { GET as BOOKS_GET, POST as BOOKS_POST } from "@/app/api/books/route";
+
+// Relationship route imports
+import { POST as CHAR_POWERS_POST, DELETE as CHAR_POWERS_DELETE } from "@/app/api/characters/[id]/powers/route";
+import { POST as CHAR_MOTIVATIONS_POST, DELETE as CHAR_MOTIVATIONS_DELETE } from "@/app/api/characters/[id]/motivations/route";
+import { POST as CHAR_LOCATIONS_POST, DELETE as CHAR_LOCATIONS_DELETE } from "@/app/api/characters/[id]/locations/route";
+import { POST as CHAR_ITEMS_POST, DELETE as CHAR_ITEMS_DELETE } from "@/app/api/characters/[id]/items/route";
+import { POST as FACTION_MOTIVATIONS_POST, DELETE as FACTION_MOTIVATIONS_DELETE } from "@/app/api/factions/[id]/motivations/route";
+import { POST as PE_CHARACTERS_POST, DELETE as PE_CHARACTERS_DELETE } from "@/app/api/plot-events/[id]/characters/route";
+import { POST as PE_ITEMS_POST, DELETE as PE_ITEMS_DELETE } from "@/app/api/plot-events/[id]/items/route";
+import { POST as TL_CHARACTERS_POST, DELETE as TL_CHARACTERS_DELETE } from "@/app/api/timeline/[id]/characters/route";
 
 // --- Helpers ---
 function makeRequest(
@@ -538,5 +578,242 @@ describe("POST /api/books", () => {
       where: { id: "user-1" },
       data: { activeBookId: "book-new" },
     });
+  });
+});
+
+// ============================================================
+// Relationship routes
+// ============================================================
+const ownerCtx = { session: {}, userId: "user-1", bookId: "book-1", role: "owner" };
+const viewerCtx = { session: {}, userId: "user-1", bookId: "book-1", role: "viewer" };
+const params = { params: { id: "test-id" } };
+
+describe("POST /api/characters/[id]/powers", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 401 when not authenticated", async () => {
+    mockGetBookContext.mockResolvedValue(null);
+    const res = await CHAR_POWERS_POST(makeJsonRequest("http://localhost/api/characters/c1/powers", "POST", { powerId: "p1" }), params);
+    expect(res.status).toBe(401);
+  });
+
+  it("returns 403 for viewer role", async () => {
+    mockGetBookContext.mockResolvedValue(viewerCtx);
+    const res = await CHAR_POWERS_POST(makeJsonRequest("http://localhost/api/characters/c1/powers", "POST", { powerId: "p1" }), params);
+    expect(res.status).toBe(403);
+  });
+
+  it("returns 400 when powerId is missing", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await CHAR_POWERS_POST(makeJsonRequest("http://localhost/api/characters/c1/powers", "POST", {}), params);
+    expect(res.status).toBe(400);
+  });
+
+  it("adds power for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await CHAR_POWERS_POST(makeJsonRequest("http://localhost/api/characters/c1/powers", "POST", { powerId: "p1", strengthLevel: 8 }), params);
+    expect(res.status).toBe(201);
+    expect(mockCharacterService.addPower).toHaveBeenCalledWith("test-id", "p1", 8, false, undefined);
+  });
+});
+
+describe("DELETE /api/characters/[id]/powers", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("removes power for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await CHAR_POWERS_DELETE(makeJsonRequest("http://localhost/api/characters/c1/powers", "DELETE", { powerId: "p1" }), params);
+    expect(res.status).toBe(200);
+    expect(mockCharacterService.removePower).toHaveBeenCalledWith("test-id", "p1");
+  });
+});
+
+describe("POST /api/characters/[id]/motivations", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 400 when motivationId is missing", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await CHAR_MOTIVATIONS_POST(makeJsonRequest("http://localhost/x", "POST", {}), params);
+    expect(res.status).toBe(400);
+  });
+
+  it("adds motivation for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await CHAR_MOTIVATIONS_POST(makeJsonRequest("http://localhost/x", "POST", { motivationId: "m1", priority: 3 }), params);
+    expect(res.status).toBe(201);
+    expect(mockCharacterService.addMotivation).toHaveBeenCalledWith("test-id", "m1", 3, undefined);
+  });
+});
+
+describe("DELETE /api/characters/[id]/motivations", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("removes motivation for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await CHAR_MOTIVATIONS_DELETE(makeJsonRequest("http://localhost/x", "DELETE", { motivationId: "m1" }), params);
+    expect(res.status).toBe(200);
+    expect(mockCharacterService.removeMotivation).toHaveBeenCalledWith("test-id", "m1");
+  });
+});
+
+describe("POST /api/characters/[id]/locations", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 400 when locationId or role is missing", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await CHAR_LOCATIONS_POST(makeJsonRequest("http://localhost/x", "POST", { locationId: "l1" }), params);
+    expect(res.status).toBe(400);
+  });
+
+  it("adds location for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await CHAR_LOCATIONS_POST(makeJsonRequest("http://localhost/x", "POST", { locationId: "l1", role: "Resident" }), params);
+    expect(res.status).toBe(201);
+    expect(mockCharacterService.addLocation).toHaveBeenCalledWith("test-id", "l1", "Resident");
+  });
+});
+
+describe("DELETE /api/characters/[id]/locations", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("removes location for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await CHAR_LOCATIONS_DELETE(makeJsonRequest("http://localhost/x", "DELETE", { locationId: "l1" }), params);
+    expect(res.status).toBe(200);
+    expect(mockCharacterService.removeLocation).toHaveBeenCalledWith("test-id", "l1");
+  });
+});
+
+describe("POST /api/characters/[id]/items", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 400 when itemId or status is missing", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await CHAR_ITEMS_POST(makeJsonRequest("http://localhost/x", "POST", { itemId: "i1" }), params);
+    expect(res.status).toBe(400);
+  });
+
+  it("adds item for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await CHAR_ITEMS_POST(makeJsonRequest("http://localhost/x", "POST", { itemId: "i1", status: "owned" }), params);
+    expect(res.status).toBe(201);
+    expect(mockCharacterService.addItem).toHaveBeenCalledWith("test-id", "i1", "owned", undefined);
+  });
+});
+
+describe("DELETE /api/characters/[id]/items", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("removes item for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await CHAR_ITEMS_DELETE(makeJsonRequest("http://localhost/x", "DELETE", { itemId: "i1" }), params);
+    expect(res.status).toBe(200);
+    expect(mockCharacterService.removeItem).toHaveBeenCalledWith("test-id", "i1");
+  });
+});
+
+describe("POST /api/factions/[id]/motivations", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 403 for viewer role", async () => {
+    mockGetBookContext.mockResolvedValue(viewerCtx);
+    const res = await FACTION_MOTIVATIONS_POST(makeJsonRequest("http://localhost/x", "POST", { motivationId: "m1" }), params);
+    expect(res.status).toBe(403);
+  });
+
+  it("adds motivation for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await FACTION_MOTIVATIONS_POST(makeJsonRequest("http://localhost/x", "POST", { motivationId: "m1", priority: 2 }), params);
+    expect(res.status).toBe(201);
+    expect(mockFactionService.addMotivation).toHaveBeenCalledWith("test-id", "m1", 2, undefined);
+  });
+});
+
+describe("DELETE /api/factions/[id]/motivations", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("removes motivation for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await FACTION_MOTIVATIONS_DELETE(makeJsonRequest("http://localhost/x", "DELETE", { motivationId: "m1" }), params);
+    expect(res.status).toBe(200);
+    expect(mockFactionService.removeMotivation).toHaveBeenCalledWith("test-id", "m1");
+  });
+});
+
+describe("POST /api/plot-events/[id]/characters", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 400 when characterId or role is missing", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await PE_CHARACTERS_POST(makeJsonRequest("http://localhost/x", "POST", { characterId: "c1" }), params);
+    expect(res.status).toBe(400);
+  });
+
+  it("adds character for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await PE_CHARACTERS_POST(makeJsonRequest("http://localhost/x", "POST", { characterId: "c1", role: "Protagonist" }), params);
+    expect(res.status).toBe(201);
+    expect(mockPlotEventService.addCharacter).toHaveBeenCalledWith("test-id", "c1", "Protagonist");
+  });
+});
+
+describe("DELETE /api/plot-events/[id]/characters", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("removes character for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await PE_CHARACTERS_DELETE(makeJsonRequest("http://localhost/x", "DELETE", { characterId: "c1" }), params);
+    expect(res.status).toBe(200);
+    expect(mockPlotEventService.removeCharacter).toHaveBeenCalledWith("test-id", "c1");
+  });
+});
+
+describe("POST /api/plot-events/[id]/items", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("adds item for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await PE_ITEMS_POST(makeJsonRequest("http://localhost/x", "POST", { itemId: "i1", role: "MacGuffin" }), params);
+    expect(res.status).toBe(201);
+    expect(mockPlotEventService.addItem).toHaveBeenCalledWith("test-id", "i1", "MacGuffin");
+  });
+});
+
+describe("DELETE /api/plot-events/[id]/items", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("removes item for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await PE_ITEMS_DELETE(makeJsonRequest("http://localhost/x", "DELETE", { itemId: "i1" }), params);
+    expect(res.status).toBe(200);
+    expect(mockPlotEventService.removeItem).toHaveBeenCalledWith("test-id", "i1");
+  });
+});
+
+describe("POST /api/timeline/[id]/characters", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 400 when characterId is missing", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await TL_CHARACTERS_POST(makeJsonRequest("http://localhost/x", "POST", {}), params);
+    expect(res.status).toBe(400);
+  });
+
+  it("adds character for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await TL_CHARACTERS_POST(makeJsonRequest("http://localhost/x", "POST", { characterId: "c1", notes: "Witness" }), params);
+    expect(res.status).toBe(201);
+    expect(mockTimelineService.addCharacter).toHaveBeenCalledWith("test-id", "c1", "Witness");
+  });
+});
+
+describe("DELETE /api/timeline/[id]/characters", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("removes character for owner", async () => {
+    mockGetBookContext.mockResolvedValue(ownerCtx);
+    const res = await TL_CHARACTERS_DELETE(makeJsonRequest("http://localhost/x", "DELETE", { characterId: "c1" }), params);
+    expect(res.status).toBe(200);
+    expect(mockTimelineService.removeCharacter).toHaveBeenCalledWith("test-id", "c1");
   });
 });
