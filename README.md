@@ -153,7 +153,7 @@ Full project documentation is available in the [`/docs`](./docs) folder:
 
 ## 🔗 Submission Links
 
-- **Hosted Application:** _(add once deployed)_
+- **Hosted Application:** [Vercel](https://story-bible.vercel.app)
 - **GitLab Repository:** [d424-software-engineering-capstone](https://gitlab.com/wgu-gitlab-environment/student-repos/gvecch1/d424-software-engineering-capstone/-/tree/Work?ref_type=heads)
 - **Panopto Demonstration:** [video](https://wgu.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=2e251313-fe9b-4ee1-a618-b412004644bd)
 
