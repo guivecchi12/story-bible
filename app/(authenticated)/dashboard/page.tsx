@@ -68,6 +68,7 @@ async function getRecentActivity(bookId: string) {
   return { recentCharacters, recentEvents };
 }
 
+type Activity = Awaited<ReturnType<typeof getRecentActivity>>;
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
@@ -196,23 +197,25 @@ export default async function DashboardPage() {
               <p className="text-sm text-muted-foreground">No characters yet</p>
             ) : (
               <div className="space-y-3">
-                {activity.recentCharacters.map((char) => (
-                  <Link
-                    key={char.id}
-                    href={`/characters/${char.id}`}
-                    className="flex items-center justify-between hover:bg-muted/50 rounded p-2 -mx-2"
-                  >
-                    <div>
-                      <p className="font-medium text-sm">{char.name}</p>
-                      <p className="text-xs text-muted-foreground capitalize">
-                        {char.type}
+                {activity.recentCharacters.map(
+                  (char: Activity["recentCharacters"][number]) => (
+                    <Link
+                      key={char.id}
+                      href={`/characters/${char.id}`}
+                      className="flex items-center justify-between hover:bg-muted/50 rounded p-2 -mx-2"
+                    >
+                      <div>
+                        <p className="font-medium text-sm">{char.name}</p>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {char.type}
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(char.updatedAt).toLocaleDateString()}
                       </p>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(char.updatedAt).toLocaleDateString()}
-                    </p>
-                  </Link>
-                ))}
+                    </Link>
+                  ),
+                )}
               </div>
             )}
           </CardContent>
@@ -228,23 +231,25 @@ export default async function DashboardPage() {
               </p>
             ) : (
               <div className="space-y-3">
-                {activity.recentEvents.map((event) => (
-                  <Link
-                    key={event.id}
-                    href={`/plot-events/${event.id}`}
-                    className="flex items-center justify-between hover:bg-muted/50 rounded p-2 -mx-2"
-                  >
-                    <div>
-                      <p className="font-medium text-sm">{event.title}</p>
+                {activity.recentEvents.map(
+                  (event: Activity["recentEvents"][number]) => (
+                    <Link
+                      key={event.id}
+                      href={`/plot-events/${event.id}`}
+                      className="flex items-center justify-between hover:bg-muted/50 rounded p-2 -mx-2"
+                    >
+                      <div>
+                        <p className="font-medium text-sm">{event.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {event.storyArc.title}
+                        </p>
+                      </div>
                       <p className="text-xs text-muted-foreground">
-                        {event.storyArc.title}
+                        {new Date(event.updatedAt).toLocaleDateString()}
                       </p>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(event.updatedAt).toLocaleDateString()}
-                    </p>
-                  </Link>
-                ))}
+                    </Link>
+                  ),
+                )}
               </div>
             )}
           </CardContent>
