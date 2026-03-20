@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Story Bible",
   description: "A writer's companion app for managing story elements",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
