@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { Prisma } from "@prisma/client";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -22,7 +21,10 @@ export async function GET() {
   });
 
   const books = memberships.map(
-    (m: Prisma.BookMemberGetPayload<{ include: { book: true } }>) => ({
+    (m: {
+      book: { id: string; name: string; description: string | null };
+      role: string;
+    }) => ({
       id: m.book.id,
       name: m.book.name,
       description: m.book.description,
