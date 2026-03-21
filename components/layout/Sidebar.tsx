@@ -130,18 +130,18 @@ export function Sidebar() {
   return (
     <>
       <button
-        className="fixed top-4 left-4 z-50 md:hidden rounded-md border bg-background p-2"
+        className="fixed top-3 left-4 z-50 md:hidden rounded-md border bg-background p-2"
         onClick={() => setOpen(!open)}
       >
         {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-64 border-r bg-card transition-transform md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 min-w-64 border-r bg-card transition-transform md:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex h-16 items-center border-b px-6">
+        <div className="flex h-16 items-center border-b pl-16">
           <Link
             href="/dashboard"
             className="flex items-center gap-2 font-bold text-lg"

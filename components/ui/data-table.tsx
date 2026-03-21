@@ -62,7 +62,7 @@ export function DataTable<T extends { id?: string }>({
 
   return (
     <div className="w-full">
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/50">
@@ -76,7 +76,7 @@ export function DataTable<T extends { id?: string }>({
                   )}
                   onClick={() => col.sortable && handleSort(col.key)}
                 >
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 text-nowrap">
                     {col.header}
                     {col.sortable &&
                       sortKey === col.key &&

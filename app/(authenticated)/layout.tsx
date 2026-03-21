@@ -13,11 +13,11 @@ export default async function AuthenticatedLayout({
   if (!session) redirect("/");
 
   return (
-    <div className="min-h-screen">
+    <div className="h-full">
       <Sidebar />
       <div className="md:pl-64">
         <Navbar />
-        <main className="p-6 md:p-8">{children}</main>
+        <main className="container p-2 md:p-8">{children}</main>
       </div>
     </div>
   );

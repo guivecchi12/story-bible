@@ -15,7 +15,7 @@ export function PageHeader({
   onAction,
 }: PageHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-6">
+    <div className="flex items-center justify-between mb-6 px-4 md:px-0">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
         {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
