@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useBook } from "@/lib/contexts/book-context";
+import { useTimeline } from "@/lib/contexts/timeline-context";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -46,6 +47,7 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { books, activeBook, switchBook, refreshBooks } = useBook();
+  const { timelines, activeTimeline, setActiveTimeline } = useTimeline();
   const isOwner = activeBook?.role === "owner";
   const [open, setOpen] = useState(false);
   const [bookMenuOpen, setBookMenuOpen] = useState(false);
@@ -323,6 +325,36 @@ export function Sidebar() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Timeline Switcher */}
+        {timelines.length > 0 && (
+          <div className="px-4 pb-2">
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              <Clock className="h-3 w-3 inline mr-1" />
+              Active Timeline
+            </label>
+            <select
+              value={activeTimeline?.id || ""}
+              onChange={(e) => {
+                if (e.target.value === "") {
+                  setActiveTimeline(null);
+                } else {
+                  const tl = timelines.find((t) => t.id === e.target.value);
+                  if (tl) setActiveTimeline(tl);
+                }
+              }}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            >
+              <option value="">No timeline (base state)</option>
+              {timelines.map((tl) => (
+                <option key={tl.id} value={tl.id}>
+                  #{tl.order} {tl.title}
+                  {tl.plotEvent ? ` — ${tl.plotEvent.title}` : ""}
+                </option>
+              ))}
+            </select>
           </div>
         )}
 
