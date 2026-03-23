@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBookContext } from "@/lib/book-context";
-import { itemService } from "@/lib/services";
+import { itemService, mergedEntityService } from "@/lib/services";
 import { itemSchema } from "@/lib/validation";
 
 export async function GET(
@@ -10,6 +10,17 @@ export async function GET(
   const ctx = await getBookContext(req);
   if (!ctx)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const url = new URL(req.url);
+  const timelineId = url.searchParams.get("timelineId");
+
+  if (timelineId) {
+    const merged = await mergedEntityService.getItem(params.id, timelineId);
+    if (!merged)
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(merged);
+  }
+
   const item = await itemService.getById(params.id);
   if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(item);

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBookContext } from "@/lib/book-context";
-import { locationService } from "@/lib/services";
+import { locationService, mergedEntityService } from "@/lib/services";
 import { locationSchema } from "@/lib/validation";
 
 export async function GET(
@@ -10,6 +10,17 @@ export async function GET(
   const ctx = await getBookContext(req);
   if (!ctx)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const url = new URL(req.url);
+  const timelineId = url.searchParams.get("timelineId");
+
+  if (timelineId) {
+    const merged = await mergedEntityService.getLocation(params.id, timelineId);
+    if (!merged)
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(merged);
+  }
+
   const location = await locationService.getById(params.id);
   if (!location)
     return NextResponse.json({ error: "Not found" }, { status: 404 });

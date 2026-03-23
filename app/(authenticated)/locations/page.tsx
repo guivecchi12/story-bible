@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader, TableSkeleton } from "@/components/layout";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +15,9 @@ import {
 import { FormField } from "@/components/shared";
 import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
-import { Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { useTimeline } from "@/lib/contexts/timeline-context";
 
 interface Location {
   id: string;
@@ -25,12 +27,15 @@ interface Location {
   climate?: string;
   culture?: string;
   parentId?: string | null;
+  rulerFactionId?: string | null;
   parent?: { name: string } | null;
+  rulerFaction?: { id: string; name: string } | null;
   children?: any[];
 }
 
 export default function LocationsPage() {
   const [locations, setLocations] = useState<Location[]>([]);
+  const [factions, setFactions] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -43,18 +48,25 @@ export default function LocationsPage() {
     climate: "",
     culture: "",
     parentId: "",
+    rulerFactionId: "",
   });
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
   const { addToast } = useToast();
+  const { activeTimeline } = useTimeline();
 
   const fetchData = async () => {
-    const res = await apiFetch("/api/locations");
-    if (res.ok) setLocations(await res.json());
+    const [lRes, fRes] = await Promise.all([
+      apiFetch("/api/locations"),
+      apiFetch("/api/factions"),
+    ]);
+    if (lRes.ok) setLocations(await lRes.json());
+    if (fRes.ok) setFactions(await fRes.json());
     setLoading(false);
   };
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [activeTimeline?.id]);
 
   const openCreate = () => {
     setEditing(null);
@@ -65,6 +77,7 @@ export default function LocationsPage() {
       climate: "",
       culture: "",
       parentId: "",
+      rulerFactionId: "",
     });
     setDialogOpen(true);
   };
@@ -77,6 +90,7 @@ export default function LocationsPage() {
       climate: l.climate || "",
       culture: l.culture || "",
       parentId: l.parentId || "",
+      rulerFactionId: l.rulerFactionId || "",
     });
     setDialogOpen(true);
   };
@@ -85,20 +99,39 @@ export default function LocationsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload = { ...form, parentId: form.parentId || null };
-      const res = editing
-        ? await apiFetch(`/api/locations/${editing.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          })
-        : await apiFetch("/api/locations", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+      let res: Response;
+      if (editing && activeTimeline) {
+        const tlPayload = {
+          locationId: editing.id,
+          name: form.name !== editing.name ? form.name : null,
+          type: form.type !== editing.type ? form.type : null,
+          description: form.description || null,
+          climate: form.climate || null,
+          culture: form.culture || null,
+          rulerFactionId: form.rulerFactionId || null,
+        };
+        res = await apiFetch(`/api/timeline/${activeTimeline.id}/locations`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(tlPayload),
+        });
+      } else if (editing) {
+        const payload = { ...form, parentId: form.parentId || null, rulerFactionId: form.rulerFactionId || null };
+        res = await apiFetch(`/api/locations/${editing.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        const payload = { ...form, parentId: form.parentId || null, rulerFactionId: form.rulerFactionId || null };
+        res = await apiFetch("/api/locations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
       if (res.ok) {
-        addToast({ title: editing ? "Updated" : "Created" });
+        addToast({ title: editing ? (activeTimeline ? "Timeline state updated" : "Updated") : "Created" });
         setDialogOpen(false);
         fetchData();
       } else {
@@ -151,6 +184,7 @@ export default function LocationsPage() {
       ),
     },
     { key: "parent", header: "Parent", render: (l) => l.parent?.name || "—" },
+    { key: "rulerFaction", header: "Ruler", render: (l) => l.rulerFaction?.name || "—" },
     { key: "climate", header: "Climate", render: (l) => l.climate || "—" },
   ];
 
@@ -173,8 +207,12 @@ export default function LocationsPage() {
       <DataTable
         data={locations}
         columns={columns}
+        onRowClick={(l) => router.push(`/locations/${l.id}`)}
         actions={(l) => (
           <div className="flex gap-1">
+            <Button variant="ghost" size="icon" onClick={() => router.push(`/locations/${l.id}`)}>
+              <Eye className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={() => openEdit(l)}>
               <Pencil className="h-4 w-4" />
             </Button>
@@ -194,7 +232,7 @@ export default function LocationsPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogHeader>
           <DialogTitle>
-            {editing ? "Edit Location" : "New Location"}
+            {editing ? (activeTimeline ? `Edit Location (Timeline: ${activeTimeline.title})` : "Edit Location") : "New Location"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -241,16 +279,27 @@ export default function LocationsPage() {
           <FormField
             label="Description"
             name="description"
-            type="textarea"
+            type="richtext"
             value={form.description}
             onChange={onChange}
           />
           <FormField
             label="Culture"
             name="culture"
-            type="textarea"
+            type="richtext"
             value={form.culture}
             onChange={onChange}
+          />
+          <FormField
+            label="Territorial Ruler"
+            name="rulerFactionId"
+            type="select"
+            value={form.rulerFactionId}
+            onChange={onChange}
+            options={[
+              { value: "", label: "None" },
+              ...factions.map((f) => ({ value: f.id, label: f.name })),
+            ]}
           />
           <DialogFooter>
             <Button

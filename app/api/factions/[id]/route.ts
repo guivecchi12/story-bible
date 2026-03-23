@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBookContext } from "@/lib/book-context";
-import { factionService } from "@/lib/services";
+import { factionService, mergedEntityService } from "@/lib/services";
 import { factionSchema } from "@/lib/validation";
 
 export async function GET(
@@ -10,6 +10,17 @@ export async function GET(
   const ctx = await getBookContext(req);
   if (!ctx)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const url = new URL(req.url);
+  const timelineId = url.searchParams.get("timelineId");
+
+  if (timelineId) {
+    const merged = await mergedEntityService.getFaction(params.id, timelineId);
+    if (!merged)
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(merged);
+  }
+
   const faction = await factionService.getById(params.id);
   if (!faction)
     return NextResponse.json({ error: "Not found" }, { status: 404 });

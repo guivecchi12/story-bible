@@ -250,14 +250,14 @@ export default function PlotEventsPage() {
           <FormField
             label="Description"
             name="description"
-            type="textarea"
+            type="richtext"
             value={form.description}
             onChange={onChange}
           />
           <FormField
             label="Consequence"
             name="consequence"
-            type="textarea"
+            type="richtext"
             value={form.consequence}
             onChange={onChange}
           />
