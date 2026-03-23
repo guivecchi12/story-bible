@@ -181,21 +181,21 @@ export default function PowersPage() {
           <FormField
             label="Effects"
             name="effects"
-            type="textarea"
+            type="richtext"
             value={form.effects}
             onChange={onChange}
           />
           <FormField
             label="Rules"
             name="rules"
-            type="textarea"
+            type="richtext"
             value={form.rules}
             onChange={onChange}
           />
           <FormField
             label="Weaknesses"
             name="weaknesses"
-            type="textarea"
+            type="richtext"
             value={form.weaknesses}
             onChange={onChange}
           />

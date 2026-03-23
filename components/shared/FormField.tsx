@@ -2,11 +2,17 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
+import dynamic from "next/dynamic";
+
+const RichTextEditor = dynamic(
+  () => import("@/components/ui/rich-text-editor").then((m) => m.RichTextEditor),
+  { ssr: false, loading: () => <div className="h-[120px] rounded-md border bg-muted animate-pulse" /> },
+);
 
 interface FormFieldProps {
   label: string;
   name: string;
-  type?: "text" | "email" | "password" | "number" | "textarea" | "select";
+  type?: "text" | "email" | "password" | "number" | "textarea" | "select" | "richtext";
   value: string | number;
   onChange: (
     e: React.ChangeEvent<
@@ -36,7 +42,19 @@ export function FormField({
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </Label>
-      {type === "textarea" ? (
+      {type === "richtext" ? (
+        <RichTextEditor
+          value={String(value)}
+          onChange={(html) => {
+            // Simulate a change event so the parent's onChange works
+            const syntheticEvent = {
+              target: { name, value: html },
+            } as React.ChangeEvent<HTMLTextAreaElement>;
+            onChange(syntheticEvent);
+          }}
+          placeholder={placeholder}
+        />
+      ) : type === "textarea" ? (
         <Textarea
           id={name}
           name={name}

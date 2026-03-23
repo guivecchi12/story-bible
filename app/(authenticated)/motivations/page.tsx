@@ -209,7 +209,7 @@ export default function MotivationsPage() {
           <FormField
             label="Description"
             name="description"
-            type="textarea"
+            type="richtext"
             value={form.description}
             onChange={onChange}
           />

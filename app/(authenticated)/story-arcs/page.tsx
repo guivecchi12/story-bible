@@ -254,7 +254,7 @@ export default function StoryArcsPage() {
           <FormField
             label="Description"
             name="description"
-            type="textarea"
+            type="richtext"
             value={form.description}
             onChange={onChange}
           />
