@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader, TableSkeleton } from "@/components/layout";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -14,12 +15,14 @@ import {
 import { FormField } from "@/components/shared";
 import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
-import { Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { useTimeline } from "@/lib/contexts/timeline-context";
 
 interface Item {
   id: string;
   name: string;
+  aliases?: string[];
   type: string;
   description?: string;
   lore?: string;
@@ -40,6 +43,7 @@ export default function ItemsPage() {
   const [deleting, setDeleting] = useState<Item | null>(null);
   const [form, setForm] = useState({
     name: "",
+    aliases: "",
     type: "artifact",
     description: "",
     lore: "",
@@ -47,7 +51,9 @@ export default function ItemsPage() {
     locationId: "",
   });
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
   const { addToast } = useToast();
+  const { activeTimeline } = useTimeline();
 
   const fetchData = async () => {
     const [iRes, lRes] = await Promise.all([
@@ -60,12 +66,13 @@ export default function ItemsPage() {
   };
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [activeTimeline?.id]);
 
   const openCreate = () => {
     setEditing(null);
     setForm({
       name: "",
+      aliases: "",
       type: "artifact",
       description: "",
       lore: "",
@@ -78,6 +85,7 @@ export default function ItemsPage() {
     setEditing(i);
     setForm({
       name: i.name,
+      aliases: (i.aliases || []).join(", "),
       type: i.type,
       description: i.description || "",
       lore: i.lore || "",
@@ -91,20 +99,45 @@ export default function ItemsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload = { ...form, locationId: form.locationId || null };
-      const res = editing
-        ? await apiFetch(`/api/items/${editing.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          })
-        : await apiFetch("/api/items", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+      const aliases = form.aliases
+        ? form.aliases.split(",").map((a) => a.trim()).filter(Boolean)
+        : [];
+      let res: Response;
+
+      if (editing && activeTimeline) {
+        const tlPayload: any = {
+          itemId: editing.id,
+          name: form.name !== editing.name ? form.name : null,
+          aliases,
+          aliasesOverridden: form.aliases !== ((editing as any).aliases || []).join(", "),
+          type: form.type !== editing.type ? form.type : null,
+          description: form.description || null,
+          lore: form.lore || null,
+          properties: form.properties || null,
+          locationId: form.locationId || null,
+        };
+        res = await apiFetch(`/api/timeline/${activeTimeline.id}/items`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(tlPayload),
+        });
+      } else if (editing) {
+        const payload = { ...form, aliases, locationId: form.locationId || null };
+        res = await apiFetch(`/api/items/${editing.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        const payload = { ...form, aliases, locationId: form.locationId || null };
+        res = await apiFetch("/api/items", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
       if (res.ok) {
-        addToast({ title: editing ? "Updated" : "Created" });
+        addToast({ title: editing ? (activeTimeline ? "Timeline state updated" : "Updated") : "Created" });
         setDialogOpen(false);
         fetchData();
       } else {
@@ -176,8 +209,12 @@ export default function ItemsPage() {
       <DataTable
         data={items}
         columns={columns}
+        onRowClick={(i) => router.push(`/items/${i.id}`)}
         actions={(i) => (
           <div className="flex gap-1">
+            <Button variant="ghost" size="icon" onClick={() => router.push(`/items/${i.id}`)}>
+              <Eye className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={() => openEdit(i)}>
               <Pencil className="h-4 w-4" />
             </Button>
@@ -196,7 +233,7 @@ export default function ItemsPage() {
       />
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit Item" : "New Item"}</DialogTitle>
+          <DialogTitle>{editing ? (activeTimeline ? `Edit Item (Timeline: ${activeTimeline.title})` : "Edit Item") : "New Item"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField
@@ -205,6 +242,13 @@ export default function ItemsPage() {
             value={form.name}
             onChange={onChange}
             required
+          />
+          <FormField
+            label="Also Known As"
+            name="aliases"
+            value={form.aliases}
+            onChange={onChange}
+            placeholder="Comma-separated, e.g. Narsil, The Sword That Was Broken"
           />
           <FormField
             label="Type"
@@ -234,14 +278,14 @@ export default function ItemsPage() {
           <FormField
             label="Description"
             name="description"
-            type="textarea"
+            type="richtext"
             value={form.description}
             onChange={onChange}
           />
           <FormField
             label="Lore"
             name="lore"
-            type="textarea"
+            type="richtext"
             value={form.lore}
             onChange={onChange}
           />

@@ -2,10 +2,10 @@ import { z } from "zod";
 
 export const characterSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
+  nicknames: z.array(z.string()).optional().default([]),
   type: z.enum(["main", "supporting"]),
   description: z.string().optional(),
   backstory: z.string().optional(),
-  factionId: z.string().optional().nullable(),
 });
 
 export const characterPowerSchema = z.object({

@@ -116,7 +116,7 @@ export default function ReportsPage() {
               doc.text(char.name, 14, startY);
               doc.setFontSize(10);
               doc.text(
-                `Type: ${char.type} | Faction: ${char.faction?.name || "None"}`,
+                `Type: ${char.type} | Factions: ${char.factions?.map((cf: any) => cf.faction.name).join(", ") || "None"}`,
                 14,
                 startY + 7,
               );
@@ -271,7 +271,7 @@ export default function ReportsPage() {
                 autoTable(doc, {
                   startY,
                   head: [["Member", "Type"]],
-                  body: faction.characters.map((c: any) => [c.name, c.type]),
+                  body: faction.characters.map((cf: any) => [cf.character.name, cf.character.type]),
                   margin: { left: 14 },
                   styles: { fontSize: 8 },
                 });

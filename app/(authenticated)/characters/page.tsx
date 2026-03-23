@@ -18,15 +18,16 @@ import { TableSkeleton } from "@/components/layout";
 import { useToast } from "@/components/ui/toast";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { useTimeline } from "@/lib/contexts/timeline-context";
 
 interface Character {
   id: string;
   name: string;
+  nicknames?: string[];
   type: string;
   description?: string;
   backstory?: string;
-  factionId?: string | null;
-  faction?: { id: string; name: string } | null;
+  factions?: { factionId: string; faction: { id: string; name: string } }[];
 }
 
 export default function CharactersPage() {
@@ -36,27 +37,23 @@ export default function CharactersPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Character | null>(null);
   const [deleting, setDeleting] = useState<Character | null>(null);
-  const [factions, setFactions] = useState<{ id: string; name: string }[]>([]);
   const [form, setForm] = useState({
     name: "",
+    nicknames: "",
     type: "main",
     description: "",
     backstory: "",
-    factionId: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const router = useRouter();
   const { addToast } = useToast();
+  const { activeTimeline } = useTimeline();
 
   const fetchData = async () => {
     try {
-      const [charRes, facRes] = await Promise.all([
-        apiFetch("/api/characters"),
-        apiFetch("/api/factions"),
-      ]);
+      const charRes = await apiFetch("/api/characters");
       if (charRes.ok) setCharacters(await charRes.json());
-      if (facRes.ok) setFactions(await facRes.json());
     } finally {
       setLoading(false);
     }
@@ -64,16 +61,16 @@ export default function CharactersPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [activeTimeline?.id]);
 
   const openCreate = () => {
     setEditing(null);
     setForm({
       name: "",
+      nicknames: "",
       type: "main",
       description: "",
       backstory: "",
-      factionId: "",
     });
     setErrors({});
     setDialogOpen(true);
@@ -83,10 +80,10 @@ export default function CharactersPage() {
     setEditing(char);
     setForm({
       name: char.name,
+      nicknames: (char.nicknames || []).join(", "),
       type: char.type,
       description: char.description || "",
       backstory: char.backstory || "",
-      factionId: char.factionId || "",
     });
     setErrors({});
     setDialogOpen(true);
@@ -100,21 +97,47 @@ export default function CharactersPage() {
     }
     setSaving(true);
     try {
-      const payload = { ...form, factionId: form.factionId || null };
-      const res = editing
-        ? await apiFetch(`/api/characters/${editing.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          })
-        : await apiFetch("/api/characters", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+      const nicknames = form.nicknames
+        ? form.nicknames.split(",").map((n) => n.trim()).filter(Boolean)
+        : [];
+      let res: Response;
+
+      if (editing && activeTimeline) {
+        // Save as timeline override
+        const tlPayload: any = {
+          characterId: editing.id,
+          name: form.name !== editing.name ? form.name : null,
+          nicknames,
+          nicknamesOverridden: form.nicknames !== (editing.nicknames || []).join(", "),
+          type: form.type !== editing.type ? form.type : null,
+          description: form.description || null,
+          backstory: form.backstory || null,
+        };
+        res = await apiFetch(`/api/timeline/${activeTimeline.id}/characters`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(tlPayload),
+        });
+      } else if (editing) {
+        const payload = { ...form, nicknames };
+        res = await apiFetch(`/api/characters/${editing.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        const payload = { ...form, nicknames };
+        res = await apiFetch("/api/characters", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
       if (res.ok) {
         addToast({
-          title: editing ? "Character updated" : "Character created",
+          title: editing
+            ? activeTimeline ? "Timeline state updated" : "Character updated"
+            : "Character created",
         });
         setDialogOpen(false);
         fetchData();
@@ -171,9 +194,12 @@ export default function CharactersPage() {
       ),
     },
     {
-      key: "faction",
-      header: "Faction",
-      render: (c) => c.faction?.name || "—",
+      key: "factions",
+      header: "Factions",
+      render: (c) =>
+        c.factions?.length
+          ? c.factions.map((cf) => cf.faction.name).join(", ")
+          : "—",
     },
     {
       key: "description",
@@ -237,7 +263,9 @@ export default function CharactersPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogHeader>
           <DialogTitle>
-            {editing ? "Edit Character" : "New Character"}
+            {editing
+              ? activeTimeline ? `Edit Character (Timeline: ${activeTimeline.title})` : "Edit Character"
+              : "New Character"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -248,6 +276,13 @@ export default function CharactersPage() {
             onChange={onChange}
             error={errors.name}
             required
+          />
+          <FormField
+            label="Nicknames"
+            name="nicknames"
+            value={form.nicknames}
+            onChange={onChange}
+            placeholder="Comma-separated, e.g. The Wise, Stormcrow"
           />
           <FormField
             label="Type"
@@ -261,27 +296,16 @@ export default function CharactersPage() {
             ]}
           />
           <FormField
-            label="Faction"
-            name="factionId"
-            type="select"
-            value={form.factionId}
-            onChange={onChange}
-            options={[
-              { value: "", label: "None" },
-              ...factions.map((f) => ({ value: f.id, label: f.name })),
-            ]}
-          />
-          <FormField
             label="Description"
             name="description"
-            type="textarea"
+            type="richtext"
             value={form.description}
             onChange={onChange}
           />
           <FormField
             label="Backstory"
             name="backstory"
-            type="textarea"
+            type="richtext"
             value={form.backstory}
             onChange={onChange}
           />

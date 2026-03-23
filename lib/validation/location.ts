@@ -7,6 +7,7 @@ export const locationSchema = z.object({
   climate: z.string().optional(),
   culture: z.string().optional(),
   parentId: z.string().optional().nullable(),
+  rulerFactionId: z.string().optional().nullable(),
 });
 
 export type LocationInput = z.infer<typeof locationSchema>;

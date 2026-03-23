@@ -16,6 +16,7 @@ import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { useTimeline } from "@/lib/contexts/timeline-context";
 
 interface Faction {
   id: string;
@@ -35,6 +36,7 @@ export default function FactionsPage() {
   const [saving, setSaving] = useState(false);
   const router = useRouter();
   const { addToast } = useToast();
+  const { activeTimeline } = useTimeline();
 
   const fetchData = async () => {
     const res = await apiFetch("/api/factions");
@@ -43,7 +45,7 @@ export default function FactionsPage() {
   };
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [activeTimeline?.id]);
 
   const openCreate = () => {
     setEditing(null);
@@ -60,19 +62,33 @@ export default function FactionsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = editing
-        ? await apiFetch(`/api/factions/${editing.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form),
-          })
-        : await apiFetch("/api/factions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form),
-          });
+      let res: Response;
+      if (editing && activeTimeline) {
+        const tlPayload = {
+          factionId: editing.id,
+          name: form.name !== editing.name ? form.name : null,
+          description: form.description || null,
+        };
+        res = await apiFetch(`/api/timeline/${activeTimeline.id}/factions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(tlPayload),
+        });
+      } else if (editing) {
+        res = await apiFetch(`/api/factions/${editing.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+      } else {
+        res = await apiFetch("/api/factions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+      }
       if (res.ok) {
-        addToast({ title: editing ? "Updated" : "Created" });
+        addToast({ title: editing ? (activeTimeline ? "Timeline state updated" : "Updated") : "Created" });
         setDialogOpen(false);
         fetchData();
       } else {
@@ -164,7 +180,7 @@ export default function FactionsPage() {
       />
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit Faction" : "New Faction"}</DialogTitle>
+          <DialogTitle>{editing ? (activeTimeline ? `Edit Faction (Timeline: ${activeTimeline.title})` : "Edit Faction") : "New Faction"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField
@@ -177,7 +193,7 @@ export default function FactionsPage() {
           <FormField
             label="Description"
             name="description"
-            type="textarea"
+            type="richtext"
             value={form.description}
             onChange={onChange}
           />

@@ -6,8 +6,9 @@ export const factionService = {
     return prisma.faction.findMany({
       where: { bookId },
       include: {
-        characters: true,
+        characters: { include: { character: true } },
         motivations: { include: { motivation: true } },
+        ruledLocations: true,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -17,8 +18,9 @@ export const factionService = {
     return prisma.faction.findUnique({
       where: { id },
       include: {
-        characters: true,
+        characters: { include: { character: true } },
         motivations: { include: { motivation: true } },
+        ruledLocations: true,
       },
     });
   },

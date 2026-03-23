@@ -10,8 +10,10 @@ import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Clock } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { RichTextDisplay } from "@/components/ui/rich-text-display";
+import { useTimeline } from "@/lib/contexts/timeline-context";
 
 function AddRelationForm({
   onCancel,
@@ -80,47 +82,72 @@ export default function CharacterDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { addToast } = useToast();
+  const { activeTimeline } = useTimeline();
   const [character, setCharacter] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const [allFactions, setAllFactions] = useState<any[]>([]);
   const [allPowers, setAllPowers] = useState<any[]>([]);
   const [allMotivations, setAllMotivations] = useState<any[]>([]);
   const [allLocations, setAllLocations] = useState<any[]>([]);
   const [allItems, setAllItems] = useState<any[]>([]);
 
+  const [addingFaction, setAddingFaction] = useState(false);
   const [addingPower, setAddingPower] = useState(false);
   const [addingMotivation, setAddingMotivation] = useState(false);
   const [addingLocation, setAddingLocation] = useState(false);
   const [addingItem, setAddingItem] = useState(false);
 
+  const [factionForm, setFactionForm] = useState({ factionId: "", role: "" });
   const [powerForm, setPowerForm] = useState({ powerId: "", strengthLevel: 5, isPrimary: false, notes: "" });
   const [motivationForm, setMotivationForm] = useState({ motivationId: "", priority: 1, personalNotes: "" });
   const [locationForm, setLocationForm] = useState({ locationId: "", role: "" });
   const [itemForm, setItemForm] = useState({ itemId: "", status: "owned", acquiredAt: "" });
 
+  const timelineParam = activeTimeline ? `?timelineId=${activeTimeline.id}` : "";
   const fetchCharacter = () =>
-    apiFetch(`/api/characters/${id}`)
+    apiFetch(`/api/characters/${id}${timelineParam}`)
       .then((r) => r.json())
       .then(setCharacter);
 
   useEffect(() => {
     Promise.all([
       fetchCharacter(),
+      apiFetch("/api/factions").then((r) => r.json()).then(setAllFactions),
       apiFetch("/api/powers").then((r) => r.json()).then(setAllPowers),
       apiFetch("/api/motivations").then((r) => r.json()).then(setAllMotivations),
       apiFetch("/api/locations").then((r) => r.json()).then(setAllLocations),
       apiFetch("/api/items").then((r) => r.json()).then(setAllItems),
     ]).finally(() => setLoading(false));
-  }, [id]);
+  }, [id, activeTimeline?.id]);
+
+  // Map character relation endpoints to timeline endpoints
+  const timelineEndpointMap: Record<string, string> = {
+    factions: "character-factions",
+    powers: "character-powers",
+    motivations: "character-motivations",
+    locations: "character-locations",
+    items: "character-items",
+  };
 
   const addRelation = async (endpoint: string, body: any, label: string, close: () => void) => {
-    const res = await apiFetch(`/api/characters/${id}/${endpoint}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    let res: Response;
+    if (activeTimeline && timelineEndpointMap[endpoint]) {
+      // Route to timeline endpoint, add characterId
+      res = await apiFetch(`/api/timeline/${activeTimeline.id}/${timelineEndpointMap[endpoint]}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...body, characterId: id }),
+      });
+    } else {
+      res = await apiFetch(`/api/characters/${id}/${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    }
     if (res.ok) {
-      addToast({ title: `${label} added` });
+      addToast({ title: `${label} added${activeTimeline ? " (timeline)" : ""}` });
       close();
       fetchCharacter();
     } else {
@@ -130,11 +157,20 @@ export default function CharacterDetailPage() {
   };
 
   const removeRelation = async (endpoint: string, body: any, label: string) => {
-    const res = await apiFetch(`/api/characters/${id}/${endpoint}`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    let res: Response;
+    if (activeTimeline && timelineEndpointMap[endpoint]) {
+      res = await apiFetch(`/api/timeline/${activeTimeline.id}/${timelineEndpointMap[endpoint]}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...body, characterId: id }),
+      });
+    } else {
+      res = await apiFetch(`/api/characters/${id}/${endpoint}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    }
     if (res.ok) {
       addToast({ title: `${label} removed` });
       fetchCharacter();
@@ -158,20 +194,40 @@ export default function CharacterDetailPage() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold">{character.name}</h1>
-          <div className="flex gap-2 mt-1">
+          {character.nicknames?.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              aka {character.nicknames.join(", ")}
+            </p>
+          )}
+          <div className="flex gap-2 mt-1 flex-wrap">
             <Badge>{character.type}</Badge>
-            {character.faction && (
-              <Badge variant="outline">{character.faction.name}</Badge>
+            {character.status && (
+              <Badge variant={character.status === "Dead" ? "destructive" : character.status === "Healthy" ? "default" : "secondary"}>
+                {character.status === "Other" && character.customStatus ? character.customStatus : character.status}
+              </Badge>
             )}
+            {character.factions?.map((cf: any) => (
+              <Badge key={cf.factionId} variant="outline">{cf.faction.name}{cf.role ? ` (${cf.role})` : ""}</Badge>
+            ))}
           </div>
         </div>
       </div>
+
+      {activeTimeline && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="py-3 flex items-center gap-2">
+            <Clock className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">Viewing at timeline: {activeTimeline.title}</span>
+            {activeTimeline.era && <Badge variant="outline" className="text-xs">{activeTimeline.era}</Badge>}
+          </CardContent>
+        </Card>
+      )}
 
       {character.description && (
         <Card>
           <CardHeader><CardTitle className="text-lg">Description</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{character.description}</p>
+            <RichTextDisplay content={character.description} />
           </CardContent>
         </Card>
       )}
@@ -180,10 +236,60 @@ export default function CharacterDetailPage() {
         <Card>
           <CardHeader><CardTitle className="text-lg">Backstory</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{character.backstory}</p>
+            <RichTextDisplay content={character.backstory} />
           </CardContent>
         </Card>
       )}
+
+      {/* Factions */}
+      <RelationCard
+        title="Factions"
+        adding={addingFaction}
+        onAdd={() => { setFactionForm({ factionId: "", role: "" }); setAddingFaction(true); }}
+        addForm={
+          <AddRelationForm
+            onCancel={() => setAddingFaction(false)}
+            onSubmit={() => addRelation("factions", factionForm, "Faction", () => setAddingFaction(false))}
+            disabled={!factionForm.factionId}
+          >
+            <div className="space-y-2">
+              <Label>Faction</Label>
+              <Select
+                value={factionForm.factionId}
+                onChange={(e) => setFactionForm({ ...factionForm, factionId: e.target.value })}
+                options={[
+                  { value: "", label: "Select a faction..." },
+                  ...allFactions
+                    .filter((f) => !character.factions?.some((cf: any) => cf.factionId === f.id))
+                    .map((f) => ({ value: f.id, label: f.name })),
+                ]}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Input value={factionForm.role} onChange={(e) => setFactionForm({ ...factionForm, role: e.target.value })} placeholder="e.g. Leader, Member, Spy (optional)" />
+            </div>
+          </AddRelationForm>
+        }
+        items={
+          character.factions?.length > 0 ? (
+            <div className="space-y-3">
+              {character.factions.map((cf: any) => (
+                <div key={cf.factionId} className="flex items-center justify-between border-b pb-2 last:border-0">
+                  <div>
+                    <p className="font-medium text-sm">{cf.faction.name}</p>
+                    {cf.role && <p className="text-xs text-muted-foreground">{cf.role}</p>}
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeRelation("factions", { factionId: cf.factionId }, "Faction")}>
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : null
+        }
+        emptyText="No factions assigned yet."
+      />
 
       {/* Powers */}
       <RelationCard
