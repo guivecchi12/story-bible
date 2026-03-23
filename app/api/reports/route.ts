@@ -16,7 +16,7 @@ export async function POST(req: Request) {
         data = await prisma.character.findMany({
           where: { bookId: ctx.bookId },
           include: {
-            faction: true,
+            factions: { include: { faction: true } },
             powers: { include: { power: true } },
             motivations: { include: { motivation: true } },
             locations: { include: { location: true } },
@@ -27,11 +27,15 @@ export async function POST(req: Request) {
         break;
 
       case "timeline":
-        data = await prisma.timelineEvent.findMany({
-          where: { bookId: ctx.bookId },
+        data = await prisma.timeline.findMany({
+          where: { plotEvent: { bookId: ctx.bookId } },
           include: {
             location: true,
-            characters: { include: { character: true } },
+            plotEvent: { include: { storyArc: true } },
+            characterStates: { include: { character: true } },
+            itemStates: { include: { item: true, holder: true } },
+            factionStates: { include: { faction: true } },
+            locationStates: { include: { location: true, rulerFaction: true } },
           },
           orderBy: { order: "asc" },
         });
@@ -69,7 +73,7 @@ export async function POST(req: Request) {
         data = await prisma.faction.findMany({
           where: { bookId: ctx.bookId },
           include: {
-            characters: true,
+            characters: { include: { character: true } },
             motivations: { include: { motivation: true } },
           },
           orderBy: { name: "asc" },

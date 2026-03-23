@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getBookContext } from "@/lib/book-context";
 import { timelineService } from "@/lib/services";
-import { timelineCharacterStateSchema } from "@/lib/validation";
+import { timelineFactionStateSchema } from "@/lib/validation";
 
 export async function POST(
   req: Request,
@@ -14,19 +14,13 @@ export async function POST(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   try {
     const body = await req.json();
-    const parsed = timelineCharacterStateSchema.safeParse(body);
+    const parsed = timelineFactionStateSchema.safeParse(body);
     if (!parsed.success)
-      return NextResponse.json(
-        { error: parsed.error.flatten().fieldErrors },
-        { status: 400 },
-      );
-    const result = await timelineService.setCharacterState(params.id, parsed.data);
+      return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    const result = await timelineService.setFactionState(params.id, parsed.data);
     return NextResponse.json(result, { status: 201 });
   } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -40,18 +34,11 @@ export async function DELETE(
   if (ctx.role === "viewer")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   try {
-    const { characterId } = await req.json();
-    if (!characterId)
-      return NextResponse.json(
-        { error: "characterId is required" },
-        { status: 400 },
-      );
-    await timelineService.removeCharacterState(params.id, characterId);
+    const { factionId } = await req.json();
+    if (!factionId) return NextResponse.json({ error: "factionId is required" }, { status: 400 });
+    await timelineService.removeFactionState(params.id, factionId);
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -6,7 +6,7 @@ export const characterService = {
     return prisma.character.findMany({
       where: { bookId },
       include: {
-        faction: true,
+        factions: { include: { faction: true } },
         powers: { include: { power: true } },
         motivations: { include: { motivation: true } },
         locations: { include: { location: true } },
@@ -20,13 +20,13 @@ export const characterService = {
     return prisma.character.findUnique({
       where: { id },
       include: {
-        faction: true,
+        factions: { include: { faction: true } },
         powers: { include: { power: true } },
         motivations: { include: { motivation: true } },
         locations: { include: { location: true } },
         items: { include: { item: true } },
         plotEvents: { include: { plotEvent: true } },
-        timelineEvents: { include: { timelineEvent: true } },
+        timelineStates: { include: { timeline: true } },
       },
     });
   },
@@ -34,7 +34,7 @@ export const characterService = {
   async create(data: CharacterInput, bookId: string) {
     return prisma.character.create({
       data: { ...data, bookId },
-      include: { faction: true },
+      include: { factions: { include: { faction: true } } },
     });
   },
 
@@ -42,7 +42,7 @@ export const characterService = {
     return prisma.character.update({
       where: { id },
       data,
-      include: { faction: true },
+      include: { factions: { include: { faction: true } } },
     });
   },
 
@@ -111,6 +111,18 @@ export const characterService = {
   async removeItem(characterId: string, itemId: string) {
     return prisma.characterItem.delete({
       where: { characterId_itemId: { characterId, itemId } },
+    });
+  },
+
+  async addFaction(characterId: string, factionId: string, role?: string) {
+    return prisma.characterFaction.create({
+      data: { characterId, factionId, role },
+    });
+  },
+
+  async removeFaction(characterId: string, factionId: string) {
+    return prisma.characterFaction.delete({
+      where: { characterId_factionId: { characterId, factionId } },
     });
   },
 };

@@ -10,7 +10,7 @@ export const searchService = {
       locations,
       storyArcs,
       plotEvents,
-      timelineEvents,
+      timelines,
       items,
     ] = await Promise.all([
       prisma.character.findMany({
@@ -41,8 +41,8 @@ export const searchService = {
         where: { title: { contains: query, mode: "insensitive" }, bookId },
         select: { id: true, title: true },
       }),
-      prisma.timelineEvent.findMany({
-        where: { title: { contains: query, mode: "insensitive" }, bookId },
+      prisma.timeline.findMany({
+        where: { title: { contains: query, mode: "insensitive" }, plotEvent: { bookId } },
         select: { id: true, title: true, era: true },
       }),
       prisma.item.findMany({
@@ -74,7 +74,7 @@ export const searchService = {
         ...p,
         entityType: "plot-event" as const,
       })),
-      timelineEvents: timelineEvents.map((t) => ({
+      timelines: timelines.map((t) => ({
         ...t,
         entityType: "timeline" as const,
       })),

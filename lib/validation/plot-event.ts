@@ -7,7 +7,6 @@ export const plotEventSchema = z.object({
   order: z.number().int().default(0),
   storyArcId: z.string().min(1, "Story Arc is required"),
   locationId: z.string().optional().nullable(),
-  timelineEventId: z.string().optional().nullable(),
 });
 
 export const plotEventCharacterSchema = z.object({

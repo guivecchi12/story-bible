@@ -10,8 +10,9 @@ import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Clock } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { RichTextDisplay } from "@/components/ui/rich-text-display";
 
 export default function PlotEventDetailPage() {
   const { id } = useParams();
@@ -96,7 +97,7 @@ export default function PlotEventDetailPage() {
         <Card>
           <CardHeader><CardTitle className="text-lg">Description</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{event.description}</p>
+            <RichTextDisplay content={event.description} />
           </CardContent>
         </Card>
       )}
@@ -105,10 +106,44 @@ export default function PlotEventDetailPage() {
         <Card>
           <CardHeader><CardTitle className="text-lg">Consequence</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{event.consequence}</p>
+            <RichTextDisplay content={event.consequence} />
           </CardContent>
         </Card>
       )}
+
+      {/* Timelines */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-lg">Timelines</CardTitle>
+          <Button variant="outline" size="sm" onClick={() => router.push("/timeline")}>
+            <Clock className="h-4 w-4 mr-1" /> Manage Timelines
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {event.timelines?.length > 0 ? (
+            <div className="space-y-3">
+              {event.timelines.map((t: any) => (
+                <div
+                  key={t.id}
+                  className="flex items-center justify-between border-b pb-2 last:border-0 cursor-pointer hover:bg-muted/50 rounded px-2 py-1"
+                  onClick={() => router.push(`/timeline/${t.id}`)}
+                >
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">#{t.order}</Badge>
+                    <p className="font-medium text-sm">{t.title}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {t.era && <Badge variant="outline">{t.era}</Badge>}
+                    {t.location && <Badge variant="secondary">{t.location.name}</Badge>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No timelines yet. Create one from the Timeline page.</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Characters */}
       <Card>

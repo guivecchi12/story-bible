@@ -8,6 +8,7 @@ export const locationService = {
       include: {
         parent: true,
         children: true,
+        rulerFaction: true,
         characters: { include: { character: true } },
         items: true,
       },
@@ -21,9 +22,10 @@ export const locationService = {
       include: {
         parent: true,
         children: true,
+        rulerFaction: true,
         characters: { include: { character: true } },
         plotEvents: true,
-        timelineEvents: true,
+        timelines: true,
         items: true,
       },
     });

@@ -34,7 +34,7 @@ describe("characterService", () => {
     expect(prismaMock.character.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         include: expect.objectContaining({
-          faction: true,
+          factions: expect.any(Object),
           powers: expect.any(Object),
           motivations: expect.any(Object),
           locations: expect.any(Object),
@@ -283,7 +283,7 @@ describe("factionService", () => {
     expect(prismaMock.faction.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         include: expect.objectContaining({
-          characters: true,
+          characters: { include: { character: true } },
           motivations: { include: { motivation: true } },
         }),
         orderBy: { createdAt: "desc" },
@@ -476,7 +476,7 @@ describe("plotEventService", () => {
     );
   });
 
-  it("getAll includes storyArc, location, timelineEvent, characters, items and orders by order asc", async () => {
+  it("getAll includes storyArc, location, timelines, characters, items and orders by order asc", async () => {
     await plotEventService.getAll(BOOK_ID);
 
     expect(prismaMock.plotEvent.findMany).toHaveBeenCalledWith(
@@ -484,7 +484,7 @@ describe("plotEventService", () => {
         include: expect.objectContaining({
           storyArc: true,
           location: true,
-          timelineEvent: true,
+          timelines: { orderBy: { order: "asc" } },
           characters: { include: { character: true } },
           items: { include: { item: true } },
         }),
@@ -576,74 +576,54 @@ describe("timelineService", () => {
     vi.clearAllMocks();
   });
 
-  it("getAll scopes query by bookId", async () => {
+  it("getAll scopes query by book via plotEvent relation", async () => {
     await timelineService.getAll(BOOK_ID);
 
-    expect(prismaMock.timelineEvent.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { bookId: BOOK_ID } }),
+    expect(prismaMock.timeline.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { plotEvent: { bookId: BOOK_ID } } }),
     );
   });
 
-  it("getAll includes location, characters, plotEvents and orders by order asc", async () => {
-    await timelineService.getAll(BOOK_ID);
+  it("getById queries by id with full includes", async () => {
+    await timelineService.getById("t-1");
 
-    expect(prismaMock.timelineEvent.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        include: expect.objectContaining({
-          location: true,
-          characters: { include: { character: true } },
-          plotEvents: true,
-        }),
-        orderBy: { order: "asc" },
-      }),
-    );
-  });
-
-  it("create merges bookId into data", async () => {
-    const data = { title: "Era begins" };
-
-    await timelineService.create(data as any, BOOK_ID);
-
-    expect(prismaMock.timelineEvent.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ bookId: BOOK_ID, title: "Era begins" }),
-      }),
-    );
-  });
-
-  it("getById queries by id", async () => {
-    await timelineService.getById("te-1");
-
-    expect(prismaMock.timelineEvent.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "te-1" } }),
+    expect(prismaMock.timeline.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "t-1" } }),
     );
   });
 
   it("update passes data and id", async () => {
-    await timelineService.update("te-1", { title: "Updated" } as any);
+    await timelineService.update("t-1", { title: "Updated" } as any);
 
-    expect(prismaMock.timelineEvent.update).toHaveBeenCalledWith({ where: { id: "te-1" }, data: { title: "Updated" } });
+    expect(prismaMock.timeline.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "t-1" },
+        data: { title: "Updated" },
+      }),
+    );
   });
 
   it("delete passes id", async () => {
-    await timelineService.delete("te-1");
+    await timelineService.delete("t-1");
 
-    expect(prismaMock.timelineEvent.delete).toHaveBeenCalledWith({ where: { id: "te-1" } });
+    expect(prismaMock.timeline.delete).toHaveBeenCalledWith({ where: { id: "t-1" } });
   });
 
-  it("addCharacter creates a timelineEventCharacter record", async () => {
-    await timelineService.addCharacter("te-1", "char-1", "Was present");
+  it("setCharacterState upserts character state", async () => {
+    await timelineService.setCharacterState("t-1", { characterId: "char-1", status: "Injured" });
 
-    expect(prismaMock.timelineEventCharacter.create).toHaveBeenCalledWith({
-      data: { timelineEventId: "te-1", characterId: "char-1", notes: "Was present" },
-    });
+    expect(prismaMock.timelineCharacterState.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { timelineId_characterId: { timelineId: "t-1", characterId: "char-1" } },
+      }),
+    );
   });
 
-  it("removeCharacter deletes by composite key", async () => {
-    await timelineService.removeCharacter("te-1", "char-1");
+  it("removeCharacterState deletes by composite key", async () => {
+    await timelineService.removeCharacterState("t-1", "char-1");
 
-    expect(prismaMock.timelineEventCharacter.delete).toHaveBeenCalledWith({
-      where: { timelineEventId_characterId: { timelineEventId: "te-1", characterId: "char-1" } },
+    expect(prismaMock.timelineCharacterState.delete).toHaveBeenCalledWith({
+      where: { timelineId_characterId: { timelineId: "t-1", characterId: "char-1" } },
     });
   });
 });
@@ -753,9 +733,9 @@ describe("searchService", () => {
         where: expect.objectContaining({ bookId: BOOK_ID }),
       }),
     );
-    expect(prismaMock.timelineEvent.findMany).toHaveBeenCalledWith(
+    expect(prismaMock.timeline.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ bookId: BOOK_ID }),
+        where: expect.objectContaining({ plotEvent: { bookId: BOOK_ID } }),
       }),
     );
     expect(prismaMock.item.findMany).toHaveBeenCalledWith(
@@ -798,7 +778,7 @@ describe("searchService", () => {
         }),
       }),
     );
-    expect(prismaMock.timelineEvent.findMany).toHaveBeenCalledWith(
+    expect(prismaMock.timeline.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           title: { contains: "dragon", mode: "insensitive" },

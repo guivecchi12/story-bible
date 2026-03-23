@@ -10,7 +10,7 @@ import {
   locationSchema,
   storyArcSchema,
   plotEventSchema,
-  timelineEventSchema,
+  timelineSchema,
   itemSchema,
 } from "@/lib/validation";
 
@@ -183,7 +183,6 @@ describe("characterSchema", () => {
       type: "main",
       description: "A wizard",
       backstory: "Long ago...",
-      factionId: "faction-1",
     });
     expect(result.success).toBe(true);
   });
@@ -233,11 +232,10 @@ describe("characterSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("allows nullable factionId", () => {
+  it("allows omitting optional fields", () => {
     const result = characterSchema.safeParse({
       name: "Gandalf",
       type: "main",
-      factionId: null,
     });
     expect(result.success).toBe(true);
   });
@@ -615,7 +613,6 @@ describe("plotEventSchema", () => {
       order: 5,
       storyArcId: "arc-1",
       locationId: "loc-1",
-      timelineEventId: "tl-1",
     });
     expect(result.success).toBe(true);
   });
@@ -678,15 +675,6 @@ describe("plotEventSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("allows nullable timelineEventId", () => {
-    const result = plotEventSchema.safeParse({
-      title: "The Council",
-      storyArcId: "arc-1",
-      timelineEventId: null,
-    });
-    expect(result.success).toBe(true);
-  });
-
   it("allows omitted optional fields", () => {
     const result = plotEventSchema.safeParse({
       title: "The Council",
@@ -701,24 +689,26 @@ describe("plotEventSchema", () => {
 });
 
 // ---------------------------------------------------------------------------
-// timelineEventSchema
+// timelineSchema
 // ---------------------------------------------------------------------------
-describe("timelineEventSchema", () => {
+describe("timelineSchema", () => {
   it("accepts valid input with all fields", () => {
-    const result = timelineEventSchema.safeParse({
+    const result = timelineSchema.safeParse({
       title: "The Fall of Numenor",
       description: "The island sinks",
       inWorldDate: "SA 3319",
       era: "Second Age",
       order: 1,
+      plotEventId: "pe-1",
       locationId: "loc-1",
     });
     expect(result.success).toBe(true);
   });
 
   it("accepts valid input with only required fields and applies default order", () => {
-    const result = timelineEventSchema.safeParse({
+    const result = timelineSchema.safeParse({
       title: "The Awakening",
+      plotEventId: "pe-1",
     });
     expect(result.success).toBe(true);
     if (result.success) {
@@ -727,7 +717,7 @@ describe("timelineEventSchema", () => {
   });
 
   it("rejects empty title", () => {
-    const result = timelineEventSchema.safeParse({ title: "" });
+    const result = timelineSchema.safeParse({ title: "", plotEventId: "pe-1" });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].message).toBe("Title is required");
@@ -735,37 +725,48 @@ describe("timelineEventSchema", () => {
   });
 
   it("rejects title longer than 300 characters", () => {
-    const result = timelineEventSchema.safeParse({
+    const result = timelineSchema.safeParse({
       title: "a".repeat(301),
+      plotEventId: "pe-1",
     });
     expect(result.success).toBe(false);
   });
 
   it("accepts title exactly 300 characters", () => {
-    const result = timelineEventSchema.safeParse({
+    const result = timelineSchema.safeParse({
       title: "a".repeat(300),
+      plotEventId: "pe-1",
     });
     expect(result.success).toBe(true);
   });
 
   it("rejects missing title", () => {
-    const result = timelineEventSchema.safeParse({
+    const result = timelineSchema.safeParse({
       order: 1,
+      plotEventId: "pe-1",
       locationId: "loc-1",
     });
     expect(result.success).toBe(false);
   });
 
-  it("allows nullable locationId", () => {
-    const result = timelineEventSchema.safeParse({
+  it("requires plotEventId", () => {
+    const result = timelineSchema.safeParse({
       title: "Test",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("allows nullable locationId", () => {
+    const result = timelineSchema.safeParse({
+      title: "Test",
+      plotEventId: "pe-1",
       locationId: null,
     });
     expect(result.success).toBe(true);
   });
 
   it("allows omitted optional fields", () => {
-    const result = timelineEventSchema.safeParse({ title: "Test" });
+    const result = timelineSchema.safeParse({ title: "Test", plotEventId: "pe-1" });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.description).toBeUndefined();

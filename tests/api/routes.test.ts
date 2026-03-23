@@ -41,8 +41,8 @@ const {
     removeItem: vi.fn().mockResolvedValue({}),
   },
   mockTimelineService: {
-    addCharacter: vi.fn().mockResolvedValue({}),
-    removeCharacter: vi.fn().mockResolvedValue({}),
+    setCharacterState: vi.fn().mockResolvedValue({}),
+    removeCharacterState: vi.fn().mockResolvedValue({}),
   },
   mockCharacterSchema: {
     safeParse: vi.fn().mockReturnValue({
@@ -71,7 +71,10 @@ vi.mock("@/lib/services", () => ({
   plotEventService: mockPlotEventService,
   timelineService: mockTimelineService,
 }));
-vi.mock("@/lib/validation", () => ({ characterSchema: mockCharacterSchema }));
+vi.mock("@/lib/validation", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/validation")>();
+  return { ...actual, characterSchema: mockCharacterSchema };
+});
 vi.mock("next-auth", () => ({ getServerSession: mockGetServerSession }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
 vi.mock("@/lib/db", () => ({ prisma: mockPrisma }));
@@ -795,25 +798,25 @@ describe("POST /api/timeline/[id]/characters", () => {
 
   it("returns 400 when characterId is missing", async () => {
     mockGetBookContext.mockResolvedValue(ownerCtx);
-    const res = await TL_CHARACTERS_POST(makeJsonRequest("http://localhost/x", "POST", {}), params);
+    const res = await TL_CHARACTERS_POST(makeJsonRequest("http://localhost/x", "POST", { status: "Healthy" }), params);
     expect(res.status).toBe(400);
   });
 
-  it("adds character for owner", async () => {
+  it("sets character state for owner", async () => {
     mockGetBookContext.mockResolvedValue(ownerCtx);
-    const res = await TL_CHARACTERS_POST(makeJsonRequest("http://localhost/x", "POST", { characterId: "c1", notes: "Witness" }), params);
+    const res = await TL_CHARACTERS_POST(makeJsonRequest("http://localhost/x", "POST", { characterId: "c1", status: "Injured", notes: "Witness" }), params);
     expect(res.status).toBe(201);
-    expect(mockTimelineService.addCharacter).toHaveBeenCalledWith("test-id", "c1", "Witness");
+    expect(mockTimelineService.setCharacterState).toHaveBeenCalledWith("test-id", expect.objectContaining({ characterId: "c1", status: "Injured" }));
   });
 });
 
 describe("DELETE /api/timeline/[id]/characters", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("removes character for owner", async () => {
+  it("removes character state for owner", async () => {
     mockGetBookContext.mockResolvedValue(ownerCtx);
     const res = await TL_CHARACTERS_DELETE(makeJsonRequest("http://localhost/x", "DELETE", { characterId: "c1" }), params);
     expect(res.status).toBe(200);
-    expect(mockTimelineService.removeCharacter).toHaveBeenCalledWith("test-id", "c1");
+    expect(mockTimelineService.removeCharacterState).toHaveBeenCalledWith("test-id", "c1");
   });
 });

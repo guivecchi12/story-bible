@@ -22,23 +22,22 @@ model User {
 }
 
 model Book {
-  id             String          @id @default(cuid())
-  name           String
-  description    String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  members        BookMember[]
-  invitations    Invitation[]
-  characters     Character[]
-  powers         Power[]
-  motivations    Motivation[]
-  factions       Faction[]
-  locations      Location[]
-  storyArcs      StoryArc[]
-  plotEvents     PlotEvent[]
-  timelineEvents TimelineEvent[]
-  items          Item[]
-  activeUsers    User[]          @relation("ActiveBook")
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  members     BookMember[]
+  invitations Invitation[]
+  characters  Character[]
+  powers      Power[]
+  motivations Motivation[]
+  factions    Faction[]
+  locations   Location[]
+  storyArcs   StoryArc[]
+  plotEvents  PlotEvent[]
+  items       Item[]
+  activeUsers User[]       @relation("ActiveBook")
 }
 
 model BookMember {
@@ -67,25 +66,42 @@ model Invitation {
 }
 
 model Character {
-  id             String                   @id @default(cuid())
-  name           String
-  type           String
-  description    String?
-  backstory      String?
-  bookId         String
-  factionId      String?
-  createdAt      DateTime                 @default(now())
-  updatedAt      DateTime                 @updatedAt
-  book           Book                     @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  faction        Faction?                 @relation(fields: [factionId], references: [id])
-  items          CharacterItem[]
-  locations      CharacterLocation[]
-  motivations    CharacterMotivation[]
-  powers         CharacterPower[]
-  plotEvents     PlotEventCharacter[]
-  timelineEvents TimelineEventCharacter[]
+  id          String                       @id @default(cuid())
+  name        String
+  nicknames   String[]
+  type        String
+  description String?
+  backstory   String?
+  bookId      String
+  createdAt   DateTime                     @default(now())
+  updatedAt   DateTime                     @updatedAt
+  book        Book                         @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  factions    CharacterFaction[]
+  items       CharacterItem[]
+  locations   CharacterLocation[]
+  motivations CharacterMotivation[]
+  powers      CharacterPower[]
+  plotEvents  PlotEventCharacter[]
+  // Timeline state relations
+  timelineStates      TimelineCharacterState[]
+  timelineFactions    TimelineCharacterFaction[]
+  timelineMotivations TimelineCharacterMotivation[]
+  timelinePowers      TimelineCharacterPower[]
+  timelineLocations   TimelineCharacterLocation[]
+  timelineItems       TimelineCharacterItem[]
+  heldItemStates      TimelineItemState[]          @relation("ItemHolder")
 
   @@index([bookId])
+}
+
+model CharacterFaction {
+  characterId String
+  factionId   String
+  role        String?
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  faction     Faction   @relation(fields: [factionId], references: [id], onDelete: Cascade)
+
+  @@id([characterId, factionId])
 }
 
 model Power {
@@ -99,6 +115,7 @@ model Power {
   updatedAt  DateTime         @updatedAt
   book       Book             @relation(fields: [bookId], references: [id], onDelete: Cascade)
   characters CharacterPower[]
+  timelineCharacterPowers TimelineCharacterPower[]
 
   @@index([bookId])
 }
@@ -126,6 +143,8 @@ model Motivation {
   book        Book                  @relation(fields: [bookId], references: [id], onDelete: Cascade)
   characters  CharacterMotivation[]
   factions    FactionMotivation[]
+  timelineCharacterMotivations TimelineCharacterMotivation[]
+  timelineFactionMotivations   TimelineFactionMotivation[]
 
   @@index([bookId])
 }
@@ -160,30 +179,42 @@ model Faction {
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
   book        Book                @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  characters  Character[]
+  characters  CharacterFaction[]
   motivations FactionMotivation[]
+  ruledLocations  Location[]           @relation("LocationRuler")
+  // Timeline state relations
+  timelineStates      TimelineFactionState[]
+  timelineCharacters  TimelineCharacterFaction[]
+  timelineMotivations TimelineFactionMotivation[]
+  timelineRuledLocations TimelineLocationState[]   @relation("TimelineLocationRuler")
 
   @@index([bookId])
 }
 
 model Location {
-  id             String              @id @default(cuid())
-  name           String
-  type           String
-  description    String?
-  climate        String?
-  culture        String?
-  bookId         String
-  parentId       String?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  book           Book                @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  characters     CharacterLocation[]
-  items          Item[]
-  parent         Location?           @relation("LocationHierarchy", fields: [parentId], references: [id])
-  children       Location[]          @relation("LocationHierarchy")
-  plotEvents     PlotEvent[]
-  timelineEvents TimelineEvent[]
+  id              String              @id @default(cuid())
+  name            String
+  type            String
+  description     String?
+  climate         String?
+  culture         String?
+  bookId          String
+  parentId        String?
+  rulerFactionId  String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  book            Book                @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  rulerFaction    Faction?            @relation("LocationRuler", fields: [rulerFactionId], references: [id])
+  characters      CharacterLocation[]
+  items           Item[]
+  parent          Location?           @relation("LocationHierarchy", fields: [parentId], references: [id])
+  children        Location[]          @relation("LocationHierarchy")
+  plotEvents      PlotEvent[]
+  timelines       Timeline[]
+  // Timeline state relations
+  timelineStates          TimelineLocationState[]
+  timelineItemStates      TimelineItemState[]          @relation("ItemLocation")
+  timelineCharacterLocations TimelineCharacterLocation[]
 
   @@index([bookId])
 }
@@ -217,23 +248,22 @@ model StoryArc {
 }
 
 model PlotEvent {
-  id              String               @id @default(cuid())
-  title           String
-  description     String?
-  consequence     String?
-  order           Int                  @default(0)
-  bookId          String
-  storyArcId      String
-  locationId      String?
-  timelineEventId String?
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
-  book            Book                 @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  location        Location?            @relation(fields: [locationId], references: [id])
-  storyArc        StoryArc             @relation(fields: [storyArcId], references: [id], onDelete: Cascade)
-  timelineEvent   TimelineEvent?       @relation(fields: [timelineEventId], references: [id])
-  characters      PlotEventCharacter[]
-  items           PlotEventItem[]
+  id          String               @id @default(cuid())
+  title       String
+  description String?
+  consequence String?
+  order       Int                  @default(0)
+  bookId      String
+  storyArcId  String
+  locationId  String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  book        Book                 @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  location    Location?            @relation(fields: [locationId], references: [id])
+  storyArc    StoryArc             @relation(fields: [storyArcId], references: [id], onDelete: Cascade)
+  characters  PlotEventCharacter[]
+  items       PlotEventItem[]
+  timelines   Timeline[]
 
   @@index([bookId])
 }
@@ -248,38 +278,228 @@ model PlotEventCharacter {
   @@id([plotEventId, characterId])
 }
 
-model TimelineEvent {
-  id          String                   @id @default(cuid())
+// Timeline: a point in time within a plot event
+model Timeline {
+  id          String   @id @default(cuid())
   title       String
   description String?
   inWorldDate String?
   era         String?
-  order       Int                      @default(0)
-  bookId      String
+  order       Int      @default(0)
+  plotEventId String
   locationId  String?
-  createdAt   DateTime                 @default(now())
-  updatedAt   DateTime                 @updatedAt
-  book        Book                     @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  plotEvents  PlotEvent[]
-  location    Location?                @relation(fields: [locationId], references: [id])
-  characters  TimelineEventCharacter[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@index([bookId])
+  plotEvent   PlotEvent @relation(fields: [plotEventId], references: [id], onDelete: Cascade)
+  location    Location? @relation(fields: [locationId], references: [id])
+
+  // State snapshots
+  characterStates    TimelineCharacterState[]
+  characterFactions  TimelineCharacterFaction[]
+  itemStates         TimelineItemState[]
+  factionStates      TimelineFactionState[]
+  locationStates     TimelineLocationState[]
+  characterMotivations TimelineCharacterMotivation[]
+  factionMotivations TimelineFactionMotivation[]
+  characterPowers    TimelineCharacterPower[]
+  characterLocations TimelineCharacterLocation[]
+  characterItems     TimelineCharacterItem[]
+
+  @@index([plotEventId])
 }
 
-model TimelineEventCharacter {
-  timelineEventId String
-  characterId     String
-  notes           String?
-  character       Character     @relation(fields: [characterId], references: [id], onDelete: Cascade)
-  timelineEvent   TimelineEvent @relation(fields: [timelineEventId], references: [id], onDelete: Cascade)
+// Character state at a timeline point — ALL character fields overridable
+model TimelineCharacterState {
+  id            String    @id @default(cuid())
+  timelineId    String
+  characterId   String
+  // Overridable scalar fields (null = use base value)
+  name          String?
+  nicknames     String[]
+  nicknamesOverridden Boolean @default(false)
+  type          String?
+  description   String?
+  backstory     String?
+  status        String?   // Healthy, Injured, Gravely Injured, Dead, Other
+  customStatus  String?
+  notes         String?
+  // Whether factions are overridden for this character at this timeline
+  factionsOverridden Boolean @default(false)
 
-  @@id([timelineEventId, characterId])
+  timeline      Timeline  @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  character     Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([timelineId, characterId])
+}
+
+// Character faction membership at a timeline point (used when factionsOverridden=true)
+model TimelineCharacterFaction {
+  id          String    @id @default(cuid())
+  timelineId  String
+  characterId String
+  factionId   String
+  role        String?
+
+  timeline    Timeline  @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  faction     Faction   @relation(fields: [factionId], references: [id], onDelete: Cascade)
+
+  @@unique([timelineId, characterId, factionId])
+}
+
+// Item state at a timeline point — ALL item fields overridable
+model TimelineItemState {
+  id          String     @id @default(cuid())
+  timelineId  String
+  itemId      String
+  // Overridable scalar fields
+  name        String?
+  aliases     String[]
+  aliasesOverridden Boolean @default(false)
+  type        String?
+  description String?
+  lore        String?
+  properties  String?
+  status      String?    // Active, Lost, Broken, Destroyed, Hidden, Other
+  customStatus String?
+  holderId    String?
+  locationId  String?
+  notes       String?
+
+  timeline    Timeline   @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  item        Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  holder      Character? @relation("ItemHolder", fields: [holderId], references: [id])
+  location    Location?  @relation("ItemLocation", fields: [locationId], references: [id])
+
+  @@unique([timelineId, itemId])
+}
+
+// Faction state at a timeline point — ALL faction fields overridable
+model TimelineFactionState {
+  id           String   @id @default(cuid())
+  timelineId   String
+  factionId    String
+  // Overridable scalar fields
+  name         String?
+  status       String?  // Active, Disbanded, At War, Allied, Dormant, Other
+  customStatus String?
+  description  String?
+  notes        String?
+
+  timeline     Timeline @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  faction      Faction  @relation(fields: [factionId], references: [id], onDelete: Cascade)
+
+  @@unique([timelineId, factionId])
+}
+
+// Location state at a timeline point — ALL location fields overridable
+model TimelineLocationState {
+  id           String   @id @default(cuid())
+  timelineId   String
+  locationId   String
+  // Overridable scalar fields
+  name         String?
+  type         String?
+  climate      String?
+  culture      String?
+  status       String?  // Intact, Damaged, Destroyed, Occupied, Abandoned, Other
+  customStatus String?
+  description  String?
+  notes        String?
+  rulerFactionId String?
+
+  timeline     Timeline  @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  location     Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  rulerFaction Faction?  @relation("TimelineLocationRuler", fields: [rulerFactionId], references: [id])
+
+  @@unique([timelineId, locationId])
+}
+
+// Character motivation override at a timeline point
+model TimelineCharacterMotivation {
+  id            String     @id @default(cuid())
+  timelineId    String
+  characterId   String
+  motivationId  String
+  priority      Int        @default(1)
+  personalNotes String?
+
+  timeline      Timeline   @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  character     Character  @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  motivation    Motivation @relation(fields: [motivationId], references: [id], onDelete: Cascade)
+
+  @@unique([timelineId, characterId, motivationId])
+}
+
+// Faction motivation override at a timeline point
+model TimelineFactionMotivation {
+  id           String     @id @default(cuid())
+  timelineId   String
+  factionId    String
+  motivationId String
+  priority     Int        @default(1)
+  notes        String?
+
+  timeline     Timeline   @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  faction      Faction    @relation(fields: [factionId], references: [id], onDelete: Cascade)
+  motivation   Motivation @relation(fields: [motivationId], references: [id], onDelete: Cascade)
+
+  @@unique([timelineId, factionId, motivationId])
+}
+
+// Character power override at a timeline point
+model TimelineCharacterPower {
+  id            String    @id @default(cuid())
+  timelineId    String
+  characterId   String
+  powerId       String
+  strengthLevel Int       @default(5)
+  isPrimary     Boolean   @default(false)
+  notes         String?
+
+  timeline      Timeline  @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  character     Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  power         Power     @relation(fields: [powerId], references: [id], onDelete: Cascade)
+
+  @@unique([timelineId, characterId, powerId])
+}
+
+// Character location at a timeline point
+model TimelineCharacterLocation {
+  id          String    @id @default(cuid())
+  timelineId  String
+  characterId String
+  locationId  String
+  role        String
+
+  timeline    Timeline  @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  location    Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([timelineId, characterId, locationId])
+}
+
+// Character item at a timeline point
+model TimelineCharacterItem {
+  id          String    @id @default(cuid())
+  timelineId  String
+  characterId String
+  itemId      String
+  status      String
+  acquiredAt  String?
+
+  timeline    Timeline  @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  item        Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([timelineId, characterId, itemId])
 }
 
 model Item {
   id          String          @id @default(cuid())
   name        String
+  aliases     String[]
   type        String
   description String?
   lore        String?
@@ -292,6 +512,9 @@ model Item {
   characters  CharacterItem[]
   location    Location?       @relation(fields: [locationId], references: [id])
   plotEvents  PlotEventItem[]
+  // Timeline state relations
+  timelineStates TimelineItemState[]
+  timelineCharacterItems TimelineCharacterItem[]
 
   @@index([bookId])
 }

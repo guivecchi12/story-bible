@@ -8,9 +8,9 @@ export const plotEventService = {
       include: {
         storyArc: true,
         location: true,
-        timelineEvent: true,
         characters: { include: { character: true } },
         items: { include: { item: true } },
+        timelines: { orderBy: { order: "asc" } },
       },
       orderBy: { order: "asc" },
     });
@@ -22,9 +22,12 @@ export const plotEventService = {
       include: {
         storyArc: true,
         location: true,
-        timelineEvent: true,
         characters: { include: { character: true } },
         items: { include: { item: true } },
+        timelines: {
+          include: { location: true },
+          orderBy: { order: "asc" },
+        },
       },
     });
   },

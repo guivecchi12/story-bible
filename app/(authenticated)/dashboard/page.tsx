@@ -24,7 +24,7 @@ async function getCounts(bookId: string) {
     locations,
     storyArcs,
     plotEvents,
-    timelineEvents,
+    timelines,
     items,
   ] = await Promise.all([
     prisma.character.count({ where: { bookId } }),
@@ -34,7 +34,7 @@ async function getCounts(bookId: string) {
     prisma.location.count({ where: { bookId } }),
     prisma.storyArc.count({ where: { bookId } }),
     prisma.plotEvent.count({ where: { bookId } }),
-    prisma.timelineEvent.count({ where: { bookId } }),
+    prisma.timeline.count({ where: { plotEvent: { bookId } } }),
     prisma.item.count({ where: { bookId } }),
   ]);
   return {
@@ -45,7 +45,7 @@ async function getCounts(bookId: string) {
     locations,
     storyArcs,
     plotEvents,
-    timelineEvents,
+    timelines,
     items,
   };
 }
@@ -146,7 +146,7 @@ export default async function DashboardPage() {
     },
     {
       label: "Timeline",
-      count: counts.timelineEvents,
+      count: counts.timelines,
       icon: Clock,
       href: "/timeline",
       color: "text-cyan-500",

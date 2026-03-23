@@ -17,46 +17,52 @@ import { ConfirmDialog } from "@/components/shared";
 import { useToast } from "@/components/ui/toast";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { useTimeline } from "@/lib/contexts/timeline-context";
 
-interface TimelineEvent {
+interface Timeline {
   id: string;
   title: string;
   description?: string;
   inWorldDate?: string;
   era?: string;
   order: number;
+  plotEventId: string;
   locationId?: string | null;
   location?: { name: string } | null;
+  plotEvent?: { title: string; storyArc?: { title: string } };
 }
 
 export default function TimelinePage() {
-  const [events, setEvents] = useState<TimelineEvent[]>([]);
-  const [locations, setLocations] = useState<{ id: string; name: string }[]>(
-    [],
-  );
+  const [timelines, setTimelines] = useState<Timeline[]>([]);
+  const [plotEvents, setPlotEvents] = useState<{ id: string; title: string; storyArc?: { title: string } }[]>([]);
+  const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [editing, setEditing] = useState<TimelineEvent | null>(null);
-  const [deleting, setDeleting] = useState<TimelineEvent | null>(null);
+  const [editing, setEditing] = useState<Timeline | null>(null);
+  const [deleting, setDeleting] = useState<Timeline | null>(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
     inWorldDate: "",
     era: "",
     order: "0",
+    plotEventId: "",
     locationId: "",
   });
   const [saving, setSaving] = useState(false);
   const router = useRouter();
   const { addToast } = useToast();
+  const { refreshTimelines } = useTimeline();
 
   const fetchData = async () => {
-    const [eRes, lRes] = await Promise.all([
+    const [tRes, peRes, lRes] = await Promise.all([
       apiFetch("/api/timeline"),
+      apiFetch("/api/plot-events"),
       apiFetch("/api/locations"),
     ]);
-    if (eRes.ok) setEvents(await eRes.json());
+    if (tRes.ok) setTimelines(await tRes.json());
+    if (peRes.ok) setPlotEvents(await peRes.json());
     if (lRes.ok) setLocations(await lRes.json());
     setLoading(false);
   };
@@ -72,19 +78,21 @@ export default function TimelinePage() {
       inWorldDate: "",
       era: "",
       order: "0",
+      plotEventId: plotEvents[0]?.id || "",
       locationId: "",
     });
     setDialogOpen(true);
   };
-  const openEdit = (e: TimelineEvent) => {
-    setEditing(e);
+  const openEdit = (t: Timeline) => {
+    setEditing(t);
     setForm({
-      title: e.title,
-      description: e.description || "",
-      inWorldDate: e.inWorldDate || "",
-      era: e.era || "",
-      order: String(e.order),
-      locationId: e.locationId || "",
+      title: t.title,
+      description: t.description || "",
+      inWorldDate: t.inWorldDate || "",
+      era: t.era || "",
+      order: String(t.order),
+      plotEventId: t.plotEventId,
+      locationId: t.locationId || "",
     });
     setDialogOpen(true);
   };
@@ -113,6 +121,7 @@ export default function TimelinePage() {
         addToast({ title: editing ? "Updated" : "Created" });
         setDialogOpen(false);
         fetchData();
+        refreshTimelines();
       } else {
         const data = await res.json();
         addToast({
@@ -136,6 +145,7 @@ export default function TimelinePage() {
       addToast({ title: "Deleted" });
       setDeleteOpen(false);
       fetchData();
+      refreshTimelines();
     }
     setSaving(false);
   };
@@ -145,24 +155,39 @@ export default function TimelinePage() {
     >,
   ) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const columns: Column<TimelineEvent>[] = [
+  const columns: Column<Timeline>[] = [
     { key: "order", header: "#", sortable: true },
     { key: "title", header: "Title", sortable: true },
+    {
+      key: "plotEvent",
+      header: "Plot Event",
+      render: (t) => t.plotEvent?.title || "—",
+    },
+    {
+      key: "storyArc",
+      header: "Story Arc",
+      render: (t) =>
+        t.plotEvent?.storyArc?.title ? (
+          <Badge variant="outline">{t.plotEvent.storyArc.title}</Badge>
+        ) : (
+          "—"
+        ),
+    },
     {
       key: "era",
       header: "Era",
       sortable: true,
-      render: (e) => (e.era ? <Badge variant="outline">{e.era}</Badge> : "—"),
+      render: (t) => (t.era ? <Badge variant="outline">{t.era}</Badge> : "—"),
     },
     {
       key: "inWorldDate",
       header: "In-World Date",
-      render: (e) => e.inWorldDate || "—",
+      render: (t) => t.inWorldDate || "—",
     },
     {
       key: "location",
       header: "Location",
-      render: (e) => e.location?.name || "—",
+      render: (t) => t.location?.name || "—",
     },
   ];
 
@@ -178,27 +203,27 @@ export default function TimelinePage() {
     <div>
       <PageHeader
         title="Timeline"
-        subtitle="Chronological events in your world"
-        actionLabel="Add Event"
+        subtitle="Track the state of your world across story events"
+        actionLabel="Add Timeline"
         onAction={openCreate}
       />
       <DataTable
-        data={events}
+        data={timelines}
         columns={columns}
-        onRowClick={(e) => router.push(`/timeline/${e.id}`)}
-        actions={(e) => (
+        onRowClick={(t) => router.push(`/timeline/${t.id}`)}
+        actions={(t) => (
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" onClick={() => router.push(`/timeline/${e.id}`)}>
+            <Button variant="ghost" size="icon" onClick={() => router.push(`/timeline/${t.id}`)}>
               <Eye className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => openEdit(e)}>
+            <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
               <Pencil className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => {
-                setDeleting(e);
+                setDeleting(t);
                 setDeleteOpen(true);
               }}
             >
@@ -210,7 +235,7 @@ export default function TimelinePage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogHeader>
           <DialogTitle>
-            {editing ? "Edit Timeline Event" : "New Timeline Event"}
+            {editing ? "Edit Timeline" : "New Timeline"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -220,6 +245,18 @@ export default function TimelinePage() {
             value={form.title}
             onChange={onChange}
             required
+          />
+          <FormField
+            label="Plot Event"
+            name="plotEventId"
+            type="select"
+            value={form.plotEventId}
+            onChange={onChange}
+            required
+            options={plotEvents.map((pe) => ({
+              value: pe.id,
+              label: `${pe.title}${pe.storyArc ? ` (${pe.storyArc.title})` : ""}`,
+            }))}
           />
           <FormField
             label="Order"
@@ -277,8 +314,8 @@ export default function TimelinePage() {
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        title="Delete Timeline Event"
-        description={`Delete "${deleting?.title}"?`}
+        title="Delete Timeline"
+        description={`Delete "${deleting?.title}"? All state snapshots will be lost.`}
         onConfirm={handleDelete}
         loading={saving}
       />

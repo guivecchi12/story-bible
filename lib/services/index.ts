@@ -8,3 +8,4 @@ export { plotEventService } from "./plot-event.service";
 export { timelineService } from "./timeline.service";
 export { itemService } from "./item.service";
 export { searchService } from "./search.service";
+export { mergedEntityService } from "./merged-entity.service";
